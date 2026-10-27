@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="fr" data-world="temps">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>La Machine à remonter le temps : escape game en famille à Saint-Étienne | Games 42</title>
+  <meta name="description" content="Nouvelle salle Games 42 : réparez l’horloge de la machine à remonter le temps en retrouvant trois objets dans trois époques. En famille dès 7 ans, de 3 à 6 joueurs, 1 heure. Saint-Jean-Bonnefonds, près de Saint-Étienne.">
+  <meta name="theme-color" content="#17122E">
+  <meta property="og:title" content="La Machine à remonter le temps, Games 42">
+  <meta property="og:description" content="Trois époques, trois objets, une heure pour remettre l’horloge en marche.">
+  <meta property="og:image" content="assets/img/machine-hero.webp">
+  <link rel="icon" href="assets/img/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/fraunces-var.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="assets/fonts/figtree-var.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="assets/css/lenis.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body class="page-machine">
+<a class="skip" href="#contenu">Aller au contenu</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5.5 3.5h3.2l1.8 4.6-2.2 1.4a11.5 11.5 0 0 0 6.2 6.2l1.4-2.2 4.6 1.8v3.2a2 2 0 0 1-2.1 2A17 17 0 0 1 3.5 5.6a2 2 0 0 1 2-2.1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-calm" viewBox="0 0 24 24"><path d="M20.5 13.6A8.5 8.5 0 1 1 10.4 3.5a6.6 6.6 0 0 0 10.1 10.1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-door" viewBox="0 0 24 24"><path d="M6 21V4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21M3.5 21h17M14.5 12.5h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-noscreen" viewBox="0 0 24 24"><path d="M4 5h16v11H4zM9 20h6M12 16v4M3.5 3.5l17 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.6-9.2-9.4A5.2 5.2 0 0 1 12 6.4a5.2 5.2 0 0 1 9.2 4.7C19.5 15.9 12 20.5 12 20.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.5 17.5a8.5 8.5 0 1 1 17 0M12 17.5l4.2-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.2a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><rect x="4.5" y="3.5" width="15" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 11h15M7.5 20.5v-3M16.5 20.5v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="14.3" r="1" /><circle cx="16" cy="14.3" r="1"/></symbol>
+    <symbol id="i-parking" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 17V7.5h3.2a2.7 2.7 0 0 1 0 5.4H9.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 10h19M6 15h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><path d="M4 20.5h16v-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2zM4 15.5c1.5 1.2 3 1.2 4 0 1 1.2 3 1.2 4 0 1 1.2 3 1.2 4 0 1 1.2 2.5 1.2 4 0M8 11.5V8M12 11.5V8M16 11.5V8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 4.2c.8 1 .8 1.8 0 2.3-.8-.5-.8-1.3 0-2.3zM12 4.2c.8 1 .8 1.8 0 2.3-.8-.5-.8-1.3 0-2.3zM16 4.2c.8 1 .8 1.8 0 2.3-.8-.5-.8-1.3 0-2.3z"/></symbol>
+    <symbol id="i-room" viewBox="0 0 24 24"><path d="M3.5 20.5V8.5L12 3.5l8.5 5v12zM9.5 20.5v-6h5v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-invite" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 7l8.5 6 8.5-6M9 3.5l3 2 3-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-candy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9.2L3.5 6.5v6zM16 14.8l4.5 2.7v-6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-drink" viewBox="0 0 24 24"><path d="M6 4.5h12l-1.6 15a1.5 1.5 0 0 1-1.5 1.3H9.1a1.5 1.5 0 0 1-1.5-1.3zM6.6 9.5h10.8M14 4.5l2-2.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plate" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 4v6M21.5 4v16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24"><path d="M4 20l10.5-10.5M16 3.5v3M14.5 5h3M19.5 8v2.5M18.2 9.2h2.6M11.5 3.8v1.8M10.6 4.7h1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.7a3.5 3.5 0 0 1 0 6.6M17.5 14a6.5 6.5 0 0 1 4 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3.2 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10.5l4.5 4.5 4.5-4.5M4 19.5h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div id="portal" aria-hidden="true"></div>
+<div class="notice" data-notice hidden>
+  <p data-notice-text style="margin:0"></p>
+  <button type="button" aria-label="Fermer le bandeau">×</button>
+</div>
+<header class="header">
+  <a class="brand" href="index.html" aria-label="Games 42, retour à l’accueil">
+    <img class="brand__mark" src="assets/img/logo-mark.webp" alt="" width="42" height="42">
+    <span class="brand__name">Games 42<small>Escape game à Saint-Étienne</small></span>
+  </a>
+  <nav class="nav" aria-label="Navigation principale">
+    <a href="index.html#missions">Missions</a>
+    <a href="machine-a-remonter-le-temps.html" aria-current="page">Nouvelle salle</a>
+    <a href="anniversaire.html">Anniversaires</a>
+    <a href="index.html#pros">Écoles et pros</a>
+    <a href="index.html#infos">Infos pratiques</a>
+  </nav>
+  <div class="header__tools">
+    <span class="tool tool--keys" role="img" aria-label="Clés cachées trouvées : 0 sur 3" title="Trois clés sont cachées dans la page d’accueil">
+      <svg class="k" viewBox="0 0 64 28" aria-hidden="true"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="5"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+      <svg class="k" viewBox="0 0 64 28" aria-hidden="true"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="5"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+      <svg class="k" viewBox="0 0 64 28" aria-hidden="true"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="5"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+    </span>
+    <button class="tool tool--calm" type="button" data-calm-toggle aria-pressed="false" title="Réduire les animations"><svg aria-hidden="true"><use href="#i-calm"/></svg><span>Mode calme</span><span class="sr-only">(réduit les animations)</span></button>
+    <a class="tool tool--phone" data-phone href="tel:+33631564024"><svg aria-hidden="true"><use href="#i-phone"/></svg><span>06 31 56 40 24</span><span class="sr-only">Appeler Games 42</span></a>
+    <a class="btn btn--book btn--sm" href="https://games42.4escape.io/" data-magnetic>Réserver</a>
+    <button class="burger" type="button" aria-expanded="false" aria-controls="menu"><span></span><span class="sr-only">Menu</span></button>
+  </div>
+</header>
+<nav id="menu" class="menu" aria-label="Menu mobile" aria-hidden="true">
+  <a href="index.html#missions">Missions</a>
+  <a href="machine-a-remonter-le-temps.html">Nouvelle salle</a>
+  <a href="anniversaire.html">Anniversaires</a>
+  <a href="index.html#coffres">Coffres</a>
+  <a href="index.html#pros">Écoles et pros</a>
+  <a href="index.html#infos">Infos pratiques</a>
+  <div class="menu__meta">
+    <a href="tel:+33631564024">06 31 56 40 24</a>
+    <a href="https://games42.4escape.io/">Réserver en ligne</a>
+    <button class="btn btn--ghost btn--sm" type="button" data-calm-toggle aria-pressed="false" style="justify-self:start">Mode calme</button>
+  </div>
+</nav>
+
+<main id="contenu">
+
+  <section class="page-hero" data-scene="machine" data-world="temps" aria-labelledby="m-title">
+    <div class="wrap page-hero__grid">
+      <div>
+        <ol class="crumbs" aria-label="Fil d’Ariane"><li><a href="index.html">Accueil</a></li><li><a href="index.html#missions">Missions</a></li><li aria-current="page">La Machine à remonter le temps</li></ol>
+        <p class="badge-new"><svg style="width:18px;height:18px" aria-hidden="true"><use href="#i-clock"/></svg>Nouvelle salle, ouverte depuis le 3 octobre 2026</p>
+        <h1 id="m-title" class="m-title">La Machine à remonter le temps</h1>
+        <p class="lead" style="margin-top:1.4rem">L’horloge de la machine ne fonctionne plus : trois pièces manquent pour la remettre en marche. Retrouvez-les dans trois époques différentes.</p>
+        <div class="countdown">
+          <span class="countdown__num" data-countdown aria-hidden="true">60:00</span>
+          <p>Le temps s’est arrêté il y a exactement 60 minutes. Vite, ne traînez pas.</p>
+        </div>
+        <ul class="facts">
+          <li>1 heure</li><li>3 à 6 joueurs</li><li>En famille dès 7 ans</li><li>Difficulté famille 5,5/10</li>
+        </ul>
+        <div class="actions" style="margin-top:1.6rem">
+          <a class="btn btn--book" href="https://games42.4escape.io/" data-magnetic>Réserver la Machine</a>
+          <a class="btn btn--ghost" href="#tarifs" data-magnetic>Voir les tarifs</a>
+        </div>
+      </div>
+      <div class="hero__portal-space" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section class="objets" id="mission" data-scene="vortex" data-dim="0.32" data-ring="0.35" data-swirl="0.9" data-world="temps" aria-labelledby="obj-title">
+    <div class="objets__pin">
+      <div class="wrap objets__grid">
+        <div>
+          <h2 id="obj-title" data-split>Trois objets à retrouver</h2>
+          <p class="lead" style="margin:1.2rem 0 2rem">Chacun remet en place une pièce de l’horloge. Quand les trois sont réunis, le temps repart.</p>
+          <ol class="objets__list" style="list-style:none;padding:0">
+            <li class="objet" data-objet="0">
+              <svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="30" fill="#E3A33B"/><circle cx="42" cy="42" r="24" fill="none" stroke="#9a6414" stroke-width="2.5"/><path d="M42 26l4 9 10 1-7.5 6.8 2.2 9.8L42 47.6l-8.7 5 2.2-9.8L28 36l10-1z" fill="#ffe2a0"/></svg>
+              <div><h3><span class="objet__num">1</span>Une pièce en or</h3><p>La première pièce manquante de l’horloge.</p></div>
+            </li>
+            <li class="objet" data-objet="1">
+              <svg viewBox="0 0 84 84" aria-hidden="true"><path d="M18 20h44a6 6 0 0 1 0 12H24v32a6 6 0 0 1-12 0V26a6 6 0 0 1 6-6z" fill="#f1dcae"/><path d="M24 32h38v32a6 6 0 0 1-6 6H18a6 6 0 0 0 6-6z" fill="#e6c98c"/><path d="M31 42h24M31 49h20M31 56h16" stroke="#9a7a3a" stroke-width="2.5" stroke-linecap="round"/><circle cx="57" cy="60" r="6" fill="#b42318"/></svg>
+              <div><h3><span class="objet__num">2</span>Un parchemin</h3><p>La deuxième pièce, dans une autre époque.</p></div>
+            </li>
+            <li class="objet" data-objet="2">
+              <svg viewBox="0 0 84 84" aria-hidden="true"><path class="gear-obj" d="" fill="#2FA38F"/><circle cx="42" cy="42" r="9" fill="#17122E"/></svg>
+              <div><h3><span class="objet__num">3</span>Un engrenage</h3><p>La dernière pièce, et l’horloge peut repartir.</p></div>
+            </li>
+          </ol>
+        </div>
+        <div class="slots">
+          <svg viewBox="0 0 440 440" aria-hidden="true" data-clock>
+            <defs><radialGradient id="dial" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#2a2150"/><stop offset="1" stop-color="#140f2b"/></radialGradient></defs>
+            <path class="clk-gear clk-gear--a" d="" fill="#E3A33B" opacity=".35"/>
+            <path class="clk-gear clk-gear--b" d="" fill="#2FA38F" opacity=".45"/>
+            <circle cx="220" cy="220" r="150" fill="url(#dial)" stroke="#E3A33B" stroke-width="6"/>
+            <g class="clk-ticks"></g>
+            <g class="slot" data-slot="0" transform="translate(220 112)"><circle r="30" fill="#140f2b" stroke="#E3A33B" stroke-width="2" stroke-dasharray="5 5"/><circle class="slot__fill" r="24" fill="#E3A33B" opacity="0"/></g>
+            <g class="slot" data-slot="1" transform="translate(126 270)"><circle r="30" fill="#140f2b" stroke="#E3A33B" stroke-width="2" stroke-dasharray="5 5"/><rect class="slot__fill" x="-18" y="-14" width="36" height="28" rx="5" fill="#f1dcae" opacity="0"/></g>
+            <g class="slot" data-slot="2" transform="translate(314 270)"><circle r="30" fill="#140f2b" stroke="#E3A33B" stroke-width="2" stroke-dasharray="5 5"/><path class="slot__fill slot__gear" d="" fill="#2FA38F" opacity="0"/></g>
+            <line class="clk-min" x1="220" y1="220" x2="220" y2="120" stroke="#F3EFFA" stroke-width="7" stroke-linecap="round"/>
+            <line class="clk-hour" x1="220" y1="220" x2="276" y2="252" stroke="#E3A33B" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="220" cy="220" r="11" fill="#E3A33B"/>
+          </svg>
+          <p class="objets__status" aria-live="polite" data-status>L’horloge est arrêtée.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec epoques" id="epoques" data-scene="temps" data-dim="0.3" data-ring="0.2" data-swirl="0.5" data-world="temps" aria-labelledby="ep-title">
+    <div class="wrap sec__head sec__head--split">
+      <h2 id="ep-title" data-split>Trois époques, trois décors</h2>
+      <p class="lead">Le Japon, la France de 1340 et le Brésil de 1925 : la machine vous fait traverser des décors construits pour la salle.</p>
+    </div>
+    <div class="epoques__pin">
+      <div class="epoques__ruler" aria-hidden="true"><span>Japon</span><span>France, 1340</span><span>Brésil, 1925</span><i class="epoques__hand"></i></div>
+      <div class="epoques__viewport">
+        <div class="epoques__track">
+          <figure class="epoque epoque--badge"><div class="media ratio-11" data-media="badge-japon" data-fit="contain" style="background:transparent"></div><figcaption>Le Japon</figcaption></figure>
+          <figure class="epoque"><div class="media arch ratio-23 portal-reveal" data-media="machine-japon"></div><figcaption>Lanternes rouges du décor japonais</figcaption></figure>
+          <figure class="epoque epoque--badge"><div class="media ratio-11" data-media="badge-france-1340" data-fit="contain" style="background:transparent"></div><figcaption>France, 1340</figcaption></figure>
+          <figure class="epoque"><div class="media arch ratio-23 portal-reveal" data-media="machine-coffre-1340"></div><figcaption>Le coffre des compagnons de Du Guesclin</figcaption></figure>
+          <figure class="epoque"><div class="media arch ratio-23 portal-reveal" data-media="machine-blason"></div><figcaption>Le blason du château de Rochetaillée</figcaption></figure>
+          <figure class="epoque epoque--badge"><div class="media ratio-11" data-media="badge-bresil-1925" data-fit="contain" style="background:transparent"></div><figcaption>Brésil, 1925</figcaption></figure>
+          <figure class="epoque"><div class="media arch ratio-23 portal-reveal" data-media="machine-jungle-1925"></div><figcaption>Le bureau de l’explorateur, jungle 1925</figcaption></figure>
+          <figure class="epoque"><div class="media arch ratio-23 portal-reveal" data-media="machine-bresil"></div><figcaption>La végétation et la brume du Brésil</figcaption></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="modes" data-scene="machine" data-dim="0.25" data-ring="0.2" data-swirl="0.4" data-world="temps" aria-labelledby="modes-title">
+    <div class="wrap">
+      <div class="sec__head sec__head--split">
+        <h2 id="modes-title" data-split>Trois modes de jeu</h2>
+        <p class="lead">La même machine, des énigmes ajustées à votre équipe. Précisez le mode et l’âge des enfants au moment de réserver.</p>
+      </div>
+      <div class="modes">
+        <article class="mode">
+          <h3>En famille</h3>
+          <p class="muted" style="margin:0">Avec vos enfants dès 7 ans et vos ados : il y en a pour tout le monde.</p>
+          <div class="gauge"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(243,239,250,.15)" stroke-width="7"/><circle class="gauge__arc" data-value="5.5" cx="32" cy="32" r="26" fill="none" stroke="var(--temps)" stroke-width="7" stroke-linecap="round" transform="rotate(-90 32 32)" pathLength="10" stroke-dasharray="10" stroke-dashoffset="4.5"/></svg><div><strong>Difficulté 5,5/10</strong><br><span class="muted">Intermédiaire</span></div></div>
+          <ul class="facts" style="margin:0"><li>3 à 6 joueurs</li><li>1 heure</li></ul>
+        </article>
+        <article class="mode">
+          <h3>Entre enfants</h3>
+          <p class="muted" style="margin:0">Pour un anniversaire ou une sortie entre copains, dès 9 ans.</p>
+          <div class="gauge"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(243,239,250,.15)" stroke-width="7"/></svg><div><strong>Difficulté <span class="tbd">à compléter</span></strong></div></div>
+          <p class="flag" style="margin:0">La page « mode enfants » du site actuel ne s’affiche plus : contenu à fournir.</p>
+        </article>
+        <article class="mode">
+          <h3>Entre adultes</h3>
+          <p class="muted" style="margin:0">Des défis plus corsés, entre amis ou entre collègues.</p>
+          <div class="gauge"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(243,239,250,.15)" stroke-width="7"/></svg><div><strong>Difficulté <span class="tbd">à compléter</span></strong></div></div>
+          <p class="flag" style="margin:0">La page « mode adultes » du site actuel ne s’affiche plus : contenu à fournir.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec--lune" id="diplome" aria-labelledby="dip-title">
+    <div class="wrap diplome__grid">
+      <div>
+        <h2 id="dip-title" data-split>Rien ne fera peur</h2>
+        <p class="lead" style="margin-top:1.4rem">Trois moments différents, pensés pour les familles. Pas de zombies, pas de couloirs sombres, pas de cris, et nos portes ne sont jamais fermées à clé.</p>
+        <p style="font-family:var(--f-display);font-size:1.6rem;font-weight:620;margin-top:1.6rem;font-variation-settings:'opsz' 48,'SOFT' 100">Mission réussie ? Chacun repart avec son diplôme.</p>
+      </div>
+      <div class="diplome" aria-hidden="true">
+        <figure class="media ratio-45" data-media="machine-parchemin" data-alt=""></figure>
+        <div class="diplome__text">
+          <span>Diplôme</span>
+          <strong>Mission accomplie</strong>
+          <em>L’horloge est réparée</em>
+          <svg viewBox="0 0 80 80" class="diplome__seal"><path class="seal-gear" d="" fill="#b42318"/><circle cx="40" cy="40" r="16" fill="#8f1b12"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec--lune" id="tarifs" aria-labelledby="tarifs-title" style="padding-top:0">
+    <div class="wrap">
+      <div class="tarifs">
+        <div>
+          <h2 id="tarifs-title" data-split>Tarifs 2026</h2>
+          <table class="price-table">
+            <caption class="sr-only">Prix par joueur selon la taille de l’équipe, TTC</caption>
+            <thead><tr><th scope="col">Équipe</th><th scope="col">Par joueur</th><th scope="col">Total</th></tr></thead>
+            <tbody>
+              <tr><td>3 joueurs</td><td>30 €</td><td>90 €</td></tr>
+              <tr><td>4 joueurs</td><td>28 €</td><td>112 €</td></tr>
+              <tr><td>5 joueurs</td><td>24 €</td><td>120 €</td></tr>
+              <tr><td>6 joueurs</td><td>22 €</td><td>132 €</td></tr>
+            </tbody>
+          </table>
+          <p class="small muted">Tarifs TTC relevés sur la grille 2026 du site actuel. Bébés bienvenus et gratuits. Paiement : carte, espèces, chèques, chèques vacances.</p>
+        </div>
+        <div class="calc calc--mini" data-world="temps">
+          <div>
+            <p style="font-weight:700;margin-bottom:.8rem">Votre équipe</p>
+            <div class="stepper" data-stepper data-min="3" data-max="6" data-value="4">
+              <button type="button" data-step="-1" aria-label="Un joueur de moins">−</button>
+              <output aria-live="polite">4</output>
+              <button type="button" data-step="1" aria-label="Un joueur de plus">+</button>
+            </div>
+          </div>
+          <div class="calc__result">
+            <span class="calc__total num" data-total>112 €</span>
+            <p class="calc__detail" data-detail>soit 28 € par joueur pour 4 joueurs</p>
+            <div class="actions" style="margin-top:.6rem">
+              <a class="btn btn--book" href="https://games42.4escape.io/">Réserver ce créneau</a>
+              <a class="btn btn--ghost btn--sm" href="index.html#cadeau">Offrir en bon cadeau</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="autres" data-scene="hero" data-dim="0.35" data-ring="0.4" data-swirl="0.6" aria-labelledby="autres-title">
+    <div class="wrap">
+      <div class="sec__head"><h2 id="autres-title" data-split>Les autres mondes</h2></div>
+      <div class="others">
+        <a class="other" href="index.html#monde-sorcier" data-world="sorcier"><div class="media arch ratio-45" data-media="sorcier-grimoires"></div><strong>L’Apprenti Sorcier</strong><span>Salle, dès 9 ans, 3 à 8 joueurs</span></a>
+        <a class="other" href="index.html#monde-pirate" data-world="pirate"><div class="media arch ratio-45" data-media="pirate-black-sam"></div><strong>Le Coffre du Pirate</strong><span>Coffre, goûter ou apéritif, jusqu’à 18</span></a>
+        <a class="other" href="index.html#monde-bozo" data-world="cirque"><div class="media arch ratio-45" data-media="bozo-clown"></div><strong>Bozo le clown</strong><span>Coffre, de 5 à 8 ans</span></a>
+        <a class="other" href="index.html#monde-serpent" data-world="serpent"><div class="media arch ratio-45" data-media="serpent-coffre"></div><strong>Le Mystère du Serpent d’Or</strong><span>Coffre à emporter, dès 12 ans</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" data-scene="machine" data-dim="0.85" data-ring="0.8" data-swirl="1" data-world="temps" aria-labelledby="final-title">
+    <div class="wrap">
+      <h2 id="final-title" data-split>L’horloge vous attend</h2>
+      <p class="lead" style="margin:1.4rem auto 0">Réservez en ligne, ou appelez-nous pour choisir le bon mode de jeu.</p>
+      <div class="actions">
+        <a class="btn btn--book" href="https://games42.4escape.io/" data-magnetic>Réserver la Machine</a>
+        <a class="btn btn--ghost" href="tel:+33631564024" data-magnetic>06 31 56 40 24</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <img src="assets/img/logo-blanc.webp" alt="Games 42 escape game" width="120" height="156" loading="lazy" style="width:110px;height:auto;margin-bottom:1rem">
+        <address style="font-style:normal">Games Escape Game<br>1130, boulevard Jean Rostand<br>42650 Saint-Jean-Bonnefonds</address>
+        <p style="margin-top:.8rem"><a href="tel:+33631564024">06 31 56 40 24</a><br><a href="mailto:contact@games42.fr">contact@games42.fr</a></p>
+      </div>
+      <div>
+        <h3>Missions</h3>
+        <ul>
+          <li><a href="index.html#missions">L’Apprenti Sorcier</a></li>
+          <li><a href="machine-a-remonter-le-temps.html">La Machine à remonter le temps</a></li>
+          <li><a href="index.html#coffres">Le Coffre du Pirate</a></li>
+          <li><a href="index.html#coffres">Bozo le clown</a></li>
+          <li><a href="index.html#coffres">Le Mystère du Serpent d’Or</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Occasions</h3>
+        <ul>
+          <li><a href="anniversaire.html">Anniversaires</a></li>
+          <li><a href="index.html#cadeau">Bons cadeaux</a></li>
+          <li><a href="index.html#pros">Écoles et centres de loisirs</a></li>
+          <li><a href="index.html#pros">Seniors et entreprises</a></li>
+          <li><a href="https://games42.4escape.io/">Réserver en ligne</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Suivre Games 42</h3>
+        <ul>
+          <li><a href="https://www.facebook.com/gamesescapegame" rel="noopener">Facebook</a></li>
+          <li><a href="https://www.instagram.com/games42escapegame/" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.tiktok.com/@gamesescapegame" rel="noopener">TikTok</a></li>
+          <li><a href="https://g.page/r/Cfd39Tj5RnSyEBM/review" rel="noopener">Laisser un avis Google</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__note">
+      <span>Paiement : carte bancaire, espèces, chèques, chèques vacances papier et connectés.</span>
+      <span class="footer__legal"><a href="https://www.games42.fr/cgv">CGV</a><a href="https://www.games42.fr/mentions-legales">Mentions légales</a><a href="https://www.games42.fr/politique-de-confidentialit%C3%A9">Confidentialité</a></span>
+      <span>Maquette de démonstration, <span data-year>2026</span> : contenus et tarifs à valider par Games 42.</span>
+      <button class="btn btn--ghost btn--sm" type="button" data-calm-toggle aria-pressed="false">Mode calme</button>
+    </div>
+  </div>
+</footer>
+<div class="chrono" id="chrono" aria-hidden="true">
+  <svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="rgba(243,239,250,.22)" stroke-width="3"/><circle class="chrono__ring" cx="13" cy="13" r="10" fill="none" stroke-width="3" stroke-linecap="round" transform="rotate(-90 13 13)"/></svg>
+  <span data-chrono-text>60:00</span>
+</div>
+<div class="veil" aria-hidden="true"></div>
+<p id="keys-live" class="sr-only" aria-live="polite"></p>
+<dialog id="keys-dialog" class="dialog" aria-labelledby="keys-title">
+  <div class="dialog__body">
+    <div class="dialog__keys" aria-hidden="true">
+      <svg viewBox="0 0 64 28"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="4"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/></svg>
+      <svg viewBox="0 0 64 28"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="4"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/></svg>
+      <svg viewBox="0 0 64 28"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="4"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/></svg>
+    </div>
+    <h2 id="keys-title">Les trois clés sont à vous</h2>
+    <p class="muted" style="margin:0">Fouiller, observer, ne rien laisser passer : vous avez exactement ce qu’il faut pour sortir d’une salle en 60 minutes.</p>
+    <div class="actions" style="justify-content:center">
+      <a class="btn btn--book" href="https://games42.4escape.io/">Réserver une mission</a>
+      <button class="btn btn--ghost" type="button" data-close>Continuer la visite</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="assets/js/vendor/gsap.min.js" defer></script>
+<script src="assets/js/vendor/ScrollTrigger.min.js" defer></script>
+<script src="assets/js/vendor/SplitText.min.js" defer></script>
+<script type="module" src="assets/js/machine.js"></script>
+</body>
+</html>
