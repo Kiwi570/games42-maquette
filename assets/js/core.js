@@ -15,9 +15,11 @@ const root = document.documentElement;
 root.classList.add('js');
 
 /* ---------- Mode calme ---------- */
+/* Le stockage peut être bloqué (navigation privée, cadre) : on le résout dans le try. */
+const area = (s) => (s === 'session' ? window.sessionStorage : window.localStorage);
 const store = {
-  get(k, s = localStorage) { try { return s.getItem(k); } catch { return null; } },
-  set(k, v, s = localStorage) { try { s.setItem(k, v); } catch { /* stockage indisponible */ } },
+  get(k, s = 'local') { try { return area(s).getItem(k); } catch { return null; } },
+  set(k, v, s = 'local') { try { area(s).setItem(k, v); } catch { /* stockage indisponible */ } },
 };
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const saved = store.get('g42-calme');
@@ -72,21 +74,37 @@ if (!calm) {
   gsap.ticker.add((time) => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
 }
-export function scrollToTarget(target) {
-  const el = typeof target === 'string' ? document.querySelector(target) : target;
+/* Certaines cibles vivent dans une section épinglée (couloir horizontal) :
+   la page peut fournir la position de défilement exacte qui les montre. */
+let anchorResolver = null;
+export function setAnchorResolver(fn) { anchorResolver = fn; }
+const find = (sel) => { try { return document.querySelector(sel); } catch { return null; } };
+export function scrollToTarget(target, { instant = false } = {}) {
+  const el = typeof target === 'string' ? find(target) : target;
   if (!el) return;
-  if (lenis) lenis.scrollTo(el, { offset: -76, duration: 1.4 });
+  const y = anchorResolver?.(el);
+  if (y != null) {
+    if (lenis) lenis.scrollTo(y, { duration: instant ? 0 : 1.4, immediate: instant, force: true });
+    else window.scrollTo(0, y);
+  } else if (lenis) lenis.scrollTo(el, { offset: -76, duration: instant ? 0 : 1.4, immediate: instant, force: true });
   else el.scrollIntoView({ behavior: 'auto' });
   if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
   el.focus({ preventScroll: true });
 }
+/* Arrivée sur la page avec une ancre (#monde-sorcier depuis une autre page) */
+export function scrollToHash() {
+  if (location.hash.length < 2) return;
+  const el = find(decodeURIComponent(location.hash));
+  if (el) requestAnimationFrame(() => scrollToTarget(el, { instant: true }));
+}
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a[href^="#"]');
   if (!a || a.getAttribute('href').length < 2) return;
-  const el = document.querySelector(a.getAttribute('href'));
+  const el = find(a.getAttribute('href'));
   if (!el) return;
   e.preventDefault();
   closeMenu();
+  try { history.replaceState(null, '', a.getAttribute('href')); } catch { /* cadre sans historique */ }
   scrollToTarget(el);
 });
 
@@ -104,6 +122,14 @@ function pauseUnderLightSections() {
     });
   });
 }
+/* Change de monde et d'ambiance. En mode calme, pas d'animation : l'image est redessinée
+   une fois, directement avec le bon assombrissement (sinon le texte peut manquer de contraste). */
+export function sceneLook(scene, look) {
+  if (!portal) return;
+  if (calm) { Object.assign(portal.state, look); portal.setScene(scene); portal.render(); return; }
+  portal.setScene(scene);
+  gsap.to(portal.state, { ...look, duration: 1.2, ease: 'power2.out', overwrite: 'auto' });
+}
 export function trackScenes() {
   pauseUnderLightSections();
   document.querySelectorAll('[data-scene]:not(.porte-monde)').forEach((sec) => {
@@ -113,13 +139,10 @@ export function trackScenes() {
       end: 'bottom 55%',
       onToggle(self) {
         if (!self.isActive) return;
-        portal?.setScene(sec.dataset.scene);
+        const d = sec.dataset;
+        sceneLook(d.scene, { dim: parseFloat(d.dim ?? 1), ring: parseFloat(d.ring ?? 1), swirl: parseFloat(d.swirl ?? 1), dive: 0 });
         const w = sec.dataset.world || sec.closest('[data-world]')?.dataset.world;
         if (w) root.dataset.world = w; else delete root.dataset.world;
-        if (portal) {
-          const d = sec.dataset;
-          gsap.to(portal.state, { dim: parseFloat(d.dim ?? 1), ring: parseFloat(d.ring ?? 1), swirl: parseFloat(d.swirl ?? 1), dive: 0, duration: 1.2, ease: 'power2.out', overwrite: 'auto' });
-        }
       },
     });
   });
@@ -129,21 +152,23 @@ export function trackScenes() {
 const header = document.querySelector('.header');
 const burger = document.querySelector('.burger');
 const menu = document.getElementById('menu');
-function closeMenu() {
-  if (!menu?.classList.contains('is-open')) return;
-  menu.classList.remove('is-open');
-  burger.setAttribute('aria-expanded', 'false');
-  menu.setAttribute('aria-hidden', 'true');
-  lenis?.start();
-}
-burger?.addEventListener('click', () => {
-  const open = !menu.classList.contains('is-open');
+/* Pendant que le menu est ouvert, le reste de la page est inerte (clavier et lecteurs d'écran). */
+const behindMenu = () => document.querySelectorAll('main, .footer, .actionbar, .notice');
+function setMenu(open, { returnFocus = false } = {}) {
+  if (!menu) return;
   menu.classList.toggle('is-open', open);
   burger.setAttribute('aria-expanded', String(open));
   menu.setAttribute('aria-hidden', String(!open));
-  if (open) { lenis?.stop(); menu.querySelector('a')?.focus(); } else lenis?.start();
-});
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+  behindMenu().forEach((el) => { el.inert = open; });
+  if (open) { lenis?.stop(); menu.querySelector('a')?.focus(); } else { lenis?.start(); if (returnFocus) burger.focus(); }
+}
+function closeMenu(opts) {
+  if (!menu?.classList.contains('is-open')) return;
+  setMenu(false, opts);
+}
+burger?.addEventListener('click', () => setMenu(!menu.classList.contains('is-open'), { returnFocus: true }));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu({ returnFocus: true }); });
+menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => closeMenu()));
 if (header) {
   let lastY = 0;
   ScrollTrigger.create({
@@ -179,10 +204,10 @@ const parisParts = (date = new Date()) => {
 const noticeEl = document.querySelector('[data-notice]');
 if (noticeEl && HOURS.notice) {
   const now = parisParts();
-  if (now.iso <= HOURS.notice.until && store.get('g42-notice', sessionStorage) !== '1') {
+  if ((!HOURS.notice.from || now.iso >= HOURS.notice.from) && now.iso <= HOURS.notice.until && store.get('g42-notice', 'session') !== '1') {
     noticeEl.querySelector('[data-notice-text]').textContent = HOURS.notice.text;
     noticeEl.hidden = false;
-    noticeEl.querySelector('button')?.addEventListener('click', () => { noticeEl.hidden = true; store.set('g42-notice', '1', sessionStorage); });
+    noticeEl.querySelector('button')?.addEventListener('click', () => { noticeEl.hidden = true; store.set('g42-notice', '1', 'session'); });
   }
 }
 
@@ -192,6 +217,13 @@ const fmt = (hm) => { const [h, m] = hm.split(':'); return m === '00' ? `${parse
 export function openStatus(date = new Date()) {
   const now = parisParts(date);
   const today = HOURS.days.find((d) => d.d === now.dow);
+  const hol = HOURS.notice;
+  if (hol?.status && (!hol.from || now.iso >= hol.from) && now.iso <= hol.until) {
+    /* Vacances : jours d'ouverture connus, horaires à confirmer par le client */
+    return hol.openDays?.includes(now.dow)
+      ? { state: 'request', text: `${hol.status}, horaires à confirmer` }
+      : { state: 'closed', text: `Fermé aujourd’hui. ${hol.status}` };
+  }
   if (today.open && now.minutes >= toMin(today.open) && now.minutes < toMin(today.close)) {
     return { state: 'open', text: `Ouvert maintenant, jusqu’à ${fmt(today.close)}` };
   }
@@ -219,35 +251,64 @@ document.querySelectorAll('[data-hours]').forEach((table) => {
 });
 
 /* ---------- Chrono 60:00 ---------- */
-const chrono = document.getElementById('chrono');
-if (chrono) {
-  const txt = chrono.querySelector('[data-chrono-text]');
-  const ring = chrono.querySelector('.chrono__ring');
+/* Grand écran : un fil vertical dans la marge droite, qui ne recouvre jamais le texte.
+   Mobile : le chrono rejoint la barre d'actions en bas d'écran (Appeler, Réserver). */
+const chronoEls = document.querySelectorAll('#chrono, .actionbar');
+if (chronoEls.length) {
+  const texts = document.querySelectorAll('[data-chrono-text]');
+  const rings = document.querySelectorAll('.chrono__ring');
+  const fill = document.querySelector('.chrono__fill');
   const len = 2 * Math.PI * 10;
-  ring.style.strokeDasharray = `${len}`;
+  rings.forEach((r) => { r.style.strokeDasharray = `${len}`; });
   let lastShown = '';
   ScrollTrigger.create({
     start: 0, end: 'max',
     onUpdate(self) {
       const p = self.progress;
+      const done = p > 0.995;
       const left = Math.round((1 - p) * 3600);
-      const label = p > 0.995 ? 'Mission accomplie' : `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`;
-      if (label !== lastShown) { txt.textContent = label; lastShown = label; }
-      ring.style.strokeDashoffset = `${len * p}`;
-      chrono.classList.toggle('is-done', p > 0.995);
+      const label = done ? 'Mission accomplie' : `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`;
+      if (label !== lastShown) { texts.forEach((t) => { t.textContent = label; }); lastShown = label; }
+      rings.forEach((r) => { r.style.strokeDashoffset = `${len * p}`; });
+      if (fill) fill.style.transform = `scaleY(${p})`;
+      chronoEls.forEach((c) => c.classList.toggle('is-done', done));
     },
   });
 }
+/* La barre d'actions mobile s'efface tant que le bouton Réserver de l'ouverture est à l'écran,
+   et prend le relais dès qu'il ne l'est plus (au-dessus ou en dessous). */
+const actionbar = document.querySelector('.actionbar');
+const heroCta = document.querySelector('main > section .btn--book');
+if (actionbar) {
+  if (heroCta) {
+    const st = ScrollTrigger.create({
+      trigger: heroCta, start: 'top bottom', end: 'bottom top',
+      onToggle(self) { actionbar.classList.toggle('is-on', !self.isActive); },
+      onRefresh(self) { actionbar.classList.toggle('is-on', !self.isActive); },
+    });
+    actionbar.classList.toggle('is-on', !st.isActive);
+  } else actionbar.classList.add('is-on');
+}
 
 /* ---------- Clés cachées ---------- */
-const found = new Set(JSON.parse(store.get('g42-cles', sessionStorage) || '[]'));
+let foundInit = [];
+try { foundInit = JSON.parse(store.get('g42-cles', 'session') || '[]'); } catch { /* valeur illisible */ }
+const found = new Set(Array.isArray(foundInit) ? foundInit : []);
 const keyTools = document.querySelectorAll('.tool--keys .k');
 const keyLive = document.getElementById('keys-live');
 const keysDialog = document.getElementById('keys-dialog');
+const keysCount = document.querySelector('[data-keys-count]');
 const updateKeys = () => {
   keyTools.forEach((k, i) => k.classList.toggle('is-found', i < found.size));
   const tool = document.querySelector('.tool--keys');
   if (tool) tool.setAttribute('aria-label', `Clés cachées trouvées : ${found.size} sur 3`);
+  if (keysCount) { keysCount.hidden = found.size === 0; keysCount.querySelector('b').textContent = String(found.size); }
+};
+/* Cible visible du vol de la clé : le compteur d'en-tête, sinon celui de la barre mobile */
+const visible = (el) => {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight ? r : null;
 };
 document.querySelectorAll('.cle').forEach((btn) => {
   btn.innerHTML = KEY_SVG;
@@ -255,7 +316,7 @@ document.querySelectorAll('.cle').forEach((btn) => {
   btn.addEventListener('click', () => {
     if (found.has(btn.dataset.key)) return;
     found.add(btn.dataset.key);
-    store.set('g42-cles', JSON.stringify([...found]), sessionStorage);
+    store.set('g42-cles', JSON.stringify([...found]), 'session');
     const target = keyTools[found.size - 1];
     const a = btn.getBoundingClientRect();
     const fly = btn.cloneNode(true);
@@ -263,9 +324,12 @@ document.querySelectorAll('.cle').forEach((btn) => {
     document.body.append(fly);
     btn.classList.add('is-found');
     const done = () => { fly.remove(); updateKeys(); if (keyLive) keyLive.textContent = `Clé trouvée : ${found.size} sur 3.`; if (found.size === 3) keysDialog?.showModal(); };
-    if (target && !calm) {
-      const b = target.getBoundingClientRect();
+    if (keysCount) keysCount.hidden = false;
+    const b = visible(target) || visible(keysCount) || visible(actionbar);
+    if (b && !calm) {
       gsap.to(fly, { x: b.left - a.left - 12, y: b.top - a.top - 10, rotate: 360, scale: 0.6, duration: 1.1, ease: 'power3.inOut', onComplete: done });
+    } else if (!calm) {
+      gsap.to(fly, { y: -80, scale: 1.4, opacity: 0, duration: 0.8, ease: 'power2.out', onComplete: done });
     } else done();
   });
 });
@@ -346,8 +410,8 @@ export function portalReveals(scope = document) {
 /* ---------- Transition entre pages : un portail qui s'ouvre ---------- */
 const veil = document.querySelector('.veil');
 if (veil && !calm) {
-  if (store.get('g42-veil', sessionStorage) === '1') {
-    store.set('g42-veil', '0', sessionStorage);
+  if (store.get('g42-veil', 'session') === '1') {
+    store.set('g42-veil', '0', 'session');
     gsap.fromTo(veil, { clipPath: 'circle(150% at 50% 50%)' }, { clipPath: 'circle(0% at 50% 50%)', duration: 0.9, ease: 'expo.inOut', delay: 0.05 });
   }
   document.addEventListener('click', (e) => {
@@ -358,7 +422,7 @@ if (veil && !calm) {
     e.preventDefault();
     veil.style.setProperty('--vx', `${e.clientX}px`);
     veil.style.setProperty('--vy', `${e.clientY}px`);
-    store.set('g42-veil', '1', sessionStorage);
+    store.set('g42-veil', '1', 'session');
     gsap.fromTo(veil, { clipPath: `circle(0% at ${e.clientX}px ${e.clientY}px)` }, { clipPath: `circle(150% at ${e.clientX}px ${e.clientY}px)`, duration: 0.7, ease: 'expo.in', onComplete: () => { location.href = url.href; } });
   });
   window.addEventListener('pageshow', (e) => { if (e.persisted) gsap.set(veil, { clipPath: 'circle(0% at 50% 50%)' }); });
@@ -374,9 +438,16 @@ export function frenchSpaces(scope = document.body) {
     acceptNode: (n) => (n.parentElement && !n.parentElement.closest('script, style') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
   });
   const re = /(\S) ([?!;:])(?=\s|$|[»)])/g;
+  /* Un nombre ne se sépare pas de son unité (14 h, 27 €, 8 ans, 15 h 30, 06 31 56 40 24) */
+  const units = /(\d) (?=(?:h|min|ans?|€|km|g|%|mois|joueurs?|enfants?|coffres?|adultes|élèves|personnes)(?![\p{L}\p{N}’]))/gu;
+  const hm = /(\d[\s\u00a0]h) (?=\d)/g;
+  const tel = /(\d\d) (?=\d\d(?!\d))/g;
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-    if (re.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(re, (m, a, b) => `${a}${b === ':' ? '\u00a0' : '\u202f'}${b}`);
-    re.lastIndex = 0;
+    let v = n.nodeValue;
+    if (!/[\d?!;:]/.test(v)) continue;
+    v = v.replace(re, (m, a, b) => `${a}${b === ':' ? ' ' : ' '}${b}`)
+      .replace(units, '$1 ').replace(hm, '$1 ').replace(tel, '$1 ');
+    if (v !== n.nodeValue) n.nodeValue = v;
   }
 }
 frenchSpaces();

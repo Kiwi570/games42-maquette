@@ -8,7 +8,15 @@
   <meta name="theme-color" content="#17122E">
   <meta property="og:title" content="La Machine à remonter le temps, Games 42">
   <meta property="og:description" content="Trois époques, trois objets, une heure pour remettre l’horloge en marche.">
-  <meta property="og:image" content="assets/img/machine-hero.webp">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="Games 42">
+  <meta property="og:url" content="https://games42-maquette.vercel.app/machine-a-remonter-le-temps">
+  <meta property="og:image" content="https://games42-maquette.vercel.app/assets/img/og-machine.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
   <link rel="preload" href="assets/fonts/fraunces-var.woff" as="font" type="font/woff" crossorigin>
@@ -74,7 +82,7 @@
       <svg class="k" viewBox="0 0 64 28" aria-hidden="true"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="5"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
     </span>
     <button class="tool tool--calm" type="button" data-calm-toggle aria-pressed="false" title="Réduire les animations"><svg aria-hidden="true"><use href="#i-calm"/></svg><span>Mode calme</span><span class="sr-only">(réduit les animations)</span></button>
-    <a class="tool tool--phone" data-phone href="tel:+33631564024"><svg aria-hidden="true"><use href="#i-phone"/></svg><span>06 31 56 40 24</span><span class="sr-only">Appeler Games 42</span></a>
+    <a class="tool tool--phone" data-phone href="tel:+33631564024"><svg aria-hidden="true"><use href="#i-phone"/></svg><span>06 31 56 40 24</span><span class="sr-only">Appeler Games 42</span></a>
     <a class="btn btn--book btn--sm" href="https://games42.4escape.io/" data-magnetic>Réserver</a>
     <button class="burger" type="button" aria-expanded="false" aria-controls="menu"><span></span><span class="sr-only">Menu</span></button>
   </div>
@@ -87,7 +95,7 @@
   <a href="index.html#pros">Écoles et pros</a>
   <a href="index.html#infos">Infos pratiques</a>
   <div class="menu__meta">
-    <a href="tel:+33631564024">06 31 56 40 24</a>
+    <a href="tel:+33631564024">06 31 56 40 24</a>
     <a href="https://games42.4escape.io/">Réserver en ligne</a>
     <button class="btn btn--ghost btn--sm" type="button" data-calm-toggle aria-pressed="false" style="justify-self:start">Mode calme</button>
   </div>
@@ -107,7 +115,7 @@
           <p>Le temps s’est arrêté il y a exactement 60 minutes. Vite, ne traînez pas.</p>
         </div>
         <ul class="facts">
-          <li>1 heure</li><li>3 à 6 joueurs</li><li>En famille dès 7 ans</li><li>Difficulté famille 5,5/10</li>
+          <li>1 heure</li><li>3 à 6 joueurs</li><li>En famille dès 7 ans</li><li>Difficulté famille 5,5/10</li>
         </ul>
         <div class="actions" style="margin-top:1.6rem">
           <a class="btn btn--book" href="https://games42.4escape.io/" data-magnetic>Réserver la Machine</a>
@@ -190,13 +198,13 @@
       <div class="modes">
         <article class="mode">
           <h3>En famille</h3>
-          <p class="muted" style="margin:0">Avec vos enfants dès 7 ans et vos ados : il y en a pour tout le monde.</p>
+          <p class="muted" style="margin:0">Avec vos enfants dès 7 ans et vos ados : il y en a pour tout le monde.</p>
           <div class="gauge"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(243,239,250,.15)" stroke-width="7"/><circle class="gauge__arc" data-value="5.5" cx="32" cy="32" r="26" fill="none" stroke="var(--temps)" stroke-width="7" stroke-linecap="round" transform="rotate(-90 32 32)" pathLength="10" stroke-dasharray="10" stroke-dashoffset="4.5"/></svg><div><strong>Difficulté 5,5/10</strong><br><span class="muted">Intermédiaire</span></div></div>
-          <ul class="facts" style="margin:0"><li>3 à 6 joueurs</li><li>1 heure</li></ul>
+          <ul class="facts" style="margin:0"><li>3 à 6 joueurs</li><li>1 heure</li></ul>
         </article>
         <article class="mode">
           <h3>Entre enfants</h3>
-          <p class="muted" style="margin:0">Pour un anniversaire ou une sortie entre copains, dès 9 ans.</p>
+          <p class="muted" style="margin:0">Pour un anniversaire ou une sortie entre copains, dès 9 ans.</p>
           <div class="gauge"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(243,239,250,.15)" stroke-width="7"/></svg><div><strong>Difficulté <span class="tbd">à compléter</span></strong></div></div>
           <p class="flag" style="margin:0">La page « mode enfants » du site actuel ne s’affiche plus : contenu à fournir.</p>
         </article>
@@ -238,10 +246,10 @@
             <caption class="sr-only">Prix par joueur selon la taille de l’équipe, TTC</caption>
             <thead><tr><th scope="col">Équipe</th><th scope="col">Par joueur</th><th scope="col">Total</th></tr></thead>
             <tbody>
-              <tr><td>3 joueurs</td><td>30 €</td><td>90 €</td></tr>
-              <tr><td>4 joueurs</td><td>28 €</td><td>112 €</td></tr>
-              <tr><td>5 joueurs</td><td>24 €</td><td>120 €</td></tr>
-              <tr><td>6 joueurs</td><td>22 €</td><td>132 €</td></tr>
+              <tr><td>3 joueurs</td><td>30 €</td><td>90 €</td></tr>
+              <tr><td>4 joueurs</td><td>28 €</td><td>112 €</td></tr>
+              <tr><td>5 joueurs</td><td>24 €</td><td>120 €</td></tr>
+              <tr><td>6 joueurs</td><td>22 €</td><td>132 €</td></tr>
             </tbody>
           </table>
           <p class="small muted">Tarifs TTC relevés sur la grille 2026 du site actuel. Bébés bienvenus et gratuits. Paiement : carte, espèces, chèques, chèques vacances.</p>
@@ -256,8 +264,8 @@
             </div>
           </div>
           <div class="calc__result">
-            <span class="calc__total num" data-total>112 €</span>
-            <p class="calc__detail" data-detail>soit 28 € par joueur pour 4 joueurs</p>
+            <span class="calc__total num" data-total>112 €</span>
+            <p class="calc__detail" data-detail>soit 28 € par joueur pour 4 joueurs</p>
             <div class="actions" style="margin-top:.6rem">
               <a class="btn btn--book" href="https://games42.4escape.io/">Réserver ce créneau</a>
               <a class="btn btn--ghost btn--sm" href="index.html#cadeau">Offrir en bon cadeau</a>
@@ -272,10 +280,10 @@
     <div class="wrap">
       <div class="sec__head"><h2 id="autres-title" data-split>Les autres mondes</h2></div>
       <div class="others">
-        <a class="other" href="index.html#monde-sorcier" data-world="sorcier"><div class="media arch ratio-45" data-media="sorcier-grimoires"></div><strong>L’Apprenti Sorcier</strong><span>Salle, dès 9 ans, 3 à 8 joueurs</span></a>
+        <a class="other" href="index.html#monde-sorcier" data-world="sorcier"><div class="media arch ratio-45" data-media="sorcier-grimoires"></div><strong>L’Apprenti Sorcier</strong><span>Salle, dès 9 ans, 3 à 8 joueurs</span></a>
         <a class="other" href="index.html#monde-pirate" data-world="pirate"><div class="media arch ratio-45" data-media="pirate-black-sam"></div><strong>Le Coffre du Pirate</strong><span>Coffre, goûter ou apéritif, jusqu’à 18</span></a>
-        <a class="other" href="index.html#monde-bozo" data-world="cirque"><div class="media arch ratio-45" data-media="bozo-clown"></div><strong>Bozo le clown</strong><span>Coffre, de 5 à 8 ans</span></a>
-        <a class="other" href="index.html#monde-serpent" data-world="serpent"><div class="media arch ratio-45" data-media="serpent-coffre"></div><strong>Le Mystère du Serpent d’Or</strong><span>Coffre à emporter, dès 12 ans</span></a>
+        <a class="other" href="index.html#monde-bozo" data-world="cirque"><div class="media arch ratio-45" data-media="bozo-clown"></div><strong>Bozo le clown</strong><span>Coffre, de 5 à 8 ans</span></a>
+        <a class="other" href="index.html#monde-serpent" data-world="serpent"><div class="media arch ratio-45" data-media="serpent-coffre"></div><strong>Le Mystère du Serpent d’Or</strong><span>Coffre à emporter, dès 12 ans</span></a>
       </div>
     </div>
   </section>
@@ -286,7 +294,7 @@
       <p class="lead" style="margin:1.4rem auto 0">Réservez en ligne, ou appelez-nous pour choisir le bon mode de jeu.</p>
       <div class="actions">
         <a class="btn btn--book" href="https://games42.4escape.io/" data-magnetic>Réserver la Machine</a>
-        <a class="btn btn--ghost" href="tel:+33631564024" data-magnetic>06 31 56 40 24</a>
+        <a class="btn btn--ghost" href="tel:+33631564024" data-magnetic>06 31 56 40 24</a>
       </div>
     </div>
   </section>
@@ -297,7 +305,7 @@
       <div>
         <img src="assets/img/logo-blanc.webp" alt="Games 42 escape game" width="120" height="156" loading="lazy" style="width:110px;height:auto;margin-bottom:1rem">
         <address style="font-style:normal">Games Escape Game<br>1130, boulevard Jean Rostand<br>42650 Saint-Jean-Bonnefonds</address>
-        <p style="margin-top:.8rem"><a href="tel:+33631564024">06 31 56 40 24</a><br><a href="mailto:contact@games42.fr">contact@games42.fr</a></p>
+        <p style="margin-top:.8rem"><a href="tel:+33631564024">06 31 56 40 24</a><br><a href="mailto:contact@games42.fr">contact@games42.fr</a></p>
       </div>
       <div>
         <h3>Missions</h3>
@@ -338,9 +346,18 @@
   </div>
 </footer>
 <div class="chrono" id="chrono" aria-hidden="true">
-  <svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="rgba(243,239,250,.22)" stroke-width="3"/><circle class="chrono__ring" cx="13" cy="13" r="10" fill="none" stroke-width="3" stroke-linecap="round" transform="rotate(-90 13 13)"/></svg>
-  <span data-chrono-text>60:00</span>
+  <span class="chrono__rail"><i class="chrono__fill"></i></span>
+  <span class="chrono__time" data-chrono-text>60:00</span>
 </div>
+<nav class="actionbar" aria-label="Actions rapides">
+  <span class="actionbar__chrono" aria-hidden="true">
+    <svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="rgba(243,239,250,.22)" stroke-width="3"/><circle class="chrono__ring" cx="13" cy="13" r="10" fill="none" stroke-width="3" stroke-linecap="round" transform="rotate(-90 13 13)"/></svg>
+    <span data-chrono-text>60:00</span>
+  </span>
+  <span class="actionbar__keys" data-keys-count hidden><svg viewBox="0 0 64 28" aria-hidden="true"><circle cx="12" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="5"/><path d="M21 14 H60 M50 14 V23 M42 14 V21" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/></svg><span><b>0</b>/3<span class="sr-only"> clés trouvées</span></span></span>
+  <a class="actionbar__call" href="tel:+33631564024"><svg aria-hidden="true"><use href="#i-phone"/></svg>Appeler</a>
+  <a class="btn btn--book btn--sm" href="https://games42.4escape.io/">Réserver</a>
+</nav>
 <div class="veil" aria-hidden="true"></div>
 <p id="keys-live" class="sr-only" aria-live="polite"></p>
 <dialog id="keys-dialog" class="dialog" aria-labelledby="keys-title">

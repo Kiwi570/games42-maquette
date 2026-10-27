@@ -1,6 +1,6 @@
 /* Page « La Machine à remonter le temps » : compte à rebours, horloge à réparer,
    frise des époques, jauges, calculateur de prix. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready } from './core.js';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready, scrollToHash } from './core.js';
 import { gearPath } from './art.js';
 import { PRICES } from './data.js';
 
@@ -134,4 +134,5 @@ ready(() => {
   trackScenes();
   scenes();
   liveTitles();
+  setTimeout(scrollToHash, 60);
 });

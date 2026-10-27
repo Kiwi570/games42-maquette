@@ -120,6 +120,11 @@ export function createPortal(container, { calm = false } = {}) {
   let pending = null;
 
   let gl, renderer, program, mesh;
+  /* Test discret avant de créer le rendu : évite une erreur en console sans WebGL */
+  const canGL = (() => {
+    try { const c = document.createElement('canvas'); const g = c.getContext('webgl2') || c.getContext('webgl'); g?.getExtension('WEBGL_lose_context')?.loseContext(); return !!g; } catch { return false; }
+  })();
+  if (!canGL) return fallback(container, api, portrait);
   try {
     renderer = new Renderer({ dpr: Math.min(window.devicePixelRatio || 1, 1.5) * (matchMedia('(pointer: coarse)').matches ? 0.5 : 0.62), alpha: false, antialias: false, powerPreference: 'high-performance' });
     gl = renderer.gl;

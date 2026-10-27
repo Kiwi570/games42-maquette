@@ -1,6 +1,6 @@
 /* Page d'accueil : ouverture, cadenas à molettes, couloir des portails,
    coffre, porte, frise, carte, bon cadeau. */
-import { gsap, ScrollTrigger, SplitText, calm, fine, portal, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, frenchSpaces } from './core.js';
+import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook } from './core.js';
 import { MISSIONS, PRICES, SITE } from './data.js';
 
 const SCENE_OF = { sorcier: 'sorcier', temps: 'temps', pirate: 'pirate', cirque: 'cirque', serpent: 'serpent' };
@@ -14,7 +14,7 @@ track.innerHTML = MISSIONS.map((m) => `
       <div class="glow" aria-hidden="true"></div>
       <figure class="media arch ratio-45 portal-reveal" data-media="${m.image}" data-world="${m.world}" data-sizes="(max-width: 900px) 92vw, 34vw"></figure>
     </div>
-    <div>
+    <div class="porte-monde__copy">
       <span class="porte-monde__kind">${m.kind}</span>
       <h3 id="t-${m.id}">${m.name}</h3>
       <p>${m.pitch}</p>
@@ -29,6 +29,14 @@ track.innerHTML = MISSIONS.map((m) => `
   </article>`).join('');
 renderMedia(track);
 frenchSpaces(track);
+
+/* Pastilles du couloir : une par monde, cliquables (grand écran) */
+const progress = document.querySelector('[data-progress]');
+progress.innerHTML = MISSIONS.map((m) => `<button type="button" data-go="monde-${m.id}" title="${m.name}"><span><i></i></span><span class="sr-only">${m.name}</span></button>`).join('');
+progress.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-go]');
+  if (b) scrollToTarget(document.getElementById(b.dataset.go));
+});
 
 /* ---------- Cadenas à molettes ---------- */
 const TEAMS = [
@@ -259,24 +267,54 @@ function scenes() {
   const panels = gsap.utils.toArray('.porte-monde');
   const bars = gsap.utils.toArray('.couloir__progress i');
   const setPanelScene = (p) => {
-    portal?.setScene(p.dataset.scene);
+    sceneLook(p.dataset.scene, { dim: 0.42, ring: 0.3, swirl: 0.8, dive: 0 });
     document.documentElement.dataset.world = p.dataset.world;
-    if (portal) gsap.to(portal.state, { dim: 0.42, ring: 0.3, swirl: 0.8, dive: 0, duration: 1, overwrite: 'auto' });
   };
   mm.add({ wide: '(min-width: 900px)', narrow: '(max-width: 899px)' }, (ctx) => {
     const { wide } = ctx.conditions;
+    let cleanup = null;
     if (wide && !calm) {
       const pinEl = document.querySelector('.couloir__pin');
-      const dist = () => track.scrollWidth - window.innerWidth;
+      // Distance exacte jusqu'au dernier monde (un débordement décoratif ne doit pas la fausser)
+      const dist = () => panels[panels.length - 1].offsetLeft - track.offsetLeft;
+      const buttons = [...progress.querySelectorAll('button')];
       const move = gsap.to(track, {
         x: () => -dist(), ease: 'none',
         scrollTrigger: {
           trigger: pinEl, pin: true, start: () => (pinEl.offsetHeight > window.innerHeight - 40 ? 'top top+=20' : 'center center'),
           end: () => `+=${dist()}`, scrub: 0.8, invalidateOnRefresh: true, anticipatePin: 1,
-          snap: { snapTo: 1 / (panels.length - 1), duration: { min: 0.25, max: 0.7 }, delay: 0.12, ease: 'power2.inOut' },
-          onUpdate: (self) => bars.forEach((b, i) => { b.style.width = `${Math.max(0, Math.min(1, self.progress * panels.length - i)) * 100}%`; }),
+          onUpdate: (self) => {
+            bars.forEach((b, i) => { b.style.width = `${Math.max(0, Math.min(1, self.progress * panels.length - i)) * 100}%`; });
+            const cur = Math.round(self.progress * (panels.length - 1));
+            buttons.forEach((b, i) => b.setAttribute('aria-current', String(i === cur)));
+          },
         },
       });
+      // Position de défilement qui montre le panneau i en plein écran
+      const yOf = (i) => { const st = move.scrollTrigger; return st.start + (st.end - st.start) * (i / (panels.length - 1)); };
+      setAnchorResolver((el) => { const i = panels.indexOf(el); return i < 0 ? null : yOf(i); });
+      // Aimantation : à l'arrêt du défilement dans le couloir, on se cale sur le monde le plus proche
+      let snapping = false;
+      let lastDir = 1;
+      const offDir = lenis?.on('scroll', (l) => { if (l.direction && !snapping) lastDir = l.direction; });
+      const snap = () => {
+        const st = move.scrollTrigger;
+        if (!lenis || snapping || !st) return;
+        const y = window.scrollY;
+        if (y <= st.start + 2 || y >= st.end - 2) return;
+        // Aimantation dans le sens du geste : un geste franc fait passer au monde suivant
+        const f = ((y - st.start) / (st.end - st.start)) * (panels.length - 1);
+        const base = Math.floor(f);
+        const frac = f - base;
+        const i = frac < 0.08 ? base : frac > 0.92 ? base + 1 : lastDir > 0 ? base + 1 : base;
+        const target = yOf(Math.min(panels.length - 1, Math.max(0, i)));
+        if (Math.abs(target - y) < 4) return;
+        snapping = true;
+        lenis.scrollTo(target, { duration: 0.75, easing: (t) => 1 - (1 - t) ** 3, onComplete: () => { snapping = false; } });
+        setTimeout(() => { snapping = false; }, 1200);
+      };
+      ScrollTrigger.addEventListener('scrollEnd', snap);
+      cleanup = () => { ScrollTrigger.removeEventListener('scrollEnd', snap); offDir?.(); setAnchorResolver(null); };
       panels.forEach((p) => {
         ScrollTrigger.create({ trigger: p, containerAnimation: move, start: 'left 55%', end: 'right 55%', onToggle: (s) => s.isActive && setPanelScene(p) });
         const inner = p.querySelector('.media__inner');
@@ -289,23 +327,45 @@ function scenes() {
       });
       portalReveals(document.querySelector('.couloir'));
     }
+    return () => cleanup?.();
   });
 
   if (calm) return;
 
   // Le coffre s'ouvre
   const chest = document.querySelector('.chest');
-  gsap.timeline({ scrollTrigger: { trigger: '.coffres__stage', start: 'top 70%', end: 'bottom 35%', scrub: 0.6 } })
-    .to(chest.querySelector('.chest__lid'), { scaleY: -0.42, y: -6, transformOrigin: '50% 100%', ease: 'power2.inOut' }, 0)
-    .fromTo(chest.querySelector('.chest__rays'), { opacity: 0, scaleY: 0.3, transformOrigin: '50% 100%' }, { opacity: 1, scaleY: 1, ease: 'power2.out' }, 0.25)
-    .fromTo('.coffres__stage .cle', { y: 60, opacity: 0 }, { y: 0, opacity: 0.9, ease: 'back.out(2)' }, 0.6);
+  const sparksG = chest.querySelector('.chest__sparks');
+  const NS = 'http://www.w3.org/2000/svg';
+  const sparks = Array.from({ length: 30 }, () => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', String(gsap.utils.random(170, 430)));
+    c.setAttribute('cy', String(gsap.utils.random(184, 200)));
+    c.setAttribute('r', String(gsap.utils.random(1.2, 3.6)));
+    c.setAttribute('fill', Math.random() > 0.3 ? '#ffe7a8' : '#fff8e0');
+    sparksG.append(c);
+    return c;
+  });
+  const lid = chest.querySelector('.chest__lid');
+  const lidIn = chest.querySelector('.chest__lid-in');
+  const ct = gsap.timeline({ scrollTrigger: { trigger: '.coffres__stage', start: 'top 72%', end: 'bottom 30%', scrub: 0.7 } });
+  ct.to(lid, { y: -4, duration: 0.06, ease: 'power1.out' }, 0) // le couvercle se soulève
+    .to(lid, { scaleY: 0, transformOrigin: '50% 100%', duration: 0.34, ease: 'power2.in' }, 0.06)
+    .fromTo(lidIn, { scaleY: 0, opacity: 1, transformOrigin: '50% 100%' }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0.4)
+    .to('.chest__mouth', { opacity: 1, duration: 0.2 }, 0.32)
+    .fromTo('.chest__rays', { opacity: 0, scaleY: 0.2, transformOrigin: '50% 100%' }, { opacity: 1, scaleY: 1, duration: 0.45, ease: 'power2.out' }, 0.36);
+  sparks.forEach((c) => {
+    const at = gsap.utils.random(0.38, 0.75);
+    ct.fromTo(c, { opacity: 0, x: 0, y: 0 }, { opacity: 1, duration: 0.06 }, at)
+      .to(c, { x: gsap.utils.random(-130, 130), y: gsap.utils.random(-240, -70), duration: gsap.utils.random(0.25, 0.4), ease: 'power2.out' }, at)
+      .to(c, { opacity: 0, duration: 0.12 }, '>-0.1');
+  });
+  ct.fromTo('.coffres__stage .cle', { y: 60, opacity: 0 }, { y: 0, opacity: 0.9, duration: 0.2, ease: 'back.out(2)' }, 0.7);
   gsap.from('.chest__cards .tag-card', { y: 140, opacity: 0, rotate: (i) => (i - 1) * 4, stagger: 0.12, ease: 'power3.out', scrollTrigger: { trigger: '.chest__cards', start: 'top 92%', end: 'top 50%', scrub: 0.8 } });
-  gsap.from('.why-chest li', { y: 30, opacity: 0, stagger: 0.08, duration: 0.7, ease: 'power3.out', scrollTrigger: { trigger: '.why-chest', start: 'top 85%', once: true } });
 
-  // La porte qui ne se ferme jamais
-  gsap.timeline({ scrollTrigger: { trigger: '.door', start: 'top 75%', end: 'bottom 40%', scrub: 0.6 } })
-    .to('.door__leaf', { rotationY: -58, ease: 'power2.inOut' }, 0)
-    .fromTo('.door__light', { filter: 'brightness(.6)' }, { filter: 'brightness(1.15)', ease: 'none' }, 0)
+  // La porte qui ne se ferme jamais : la lumière gagne la pièce à mesure qu'on approche
+  gsap.timeline({ scrollTrigger: { trigger: '.door', start: 'top 80%', end: 'center 40%', scrub: 0.6 } })
+    .fromTo('.door__media .media__inner', { scale: 1.14, filter: 'brightness(.5) saturate(.75)' }, { scale: 1, filter: 'brightness(1.08) saturate(1)', ease: 'none' }, 0)
+    .fromTo('.door__glow', { opacity: 0.15 }, { opacity: 1, ease: 'power1.in' }, 0)
     .fromTo('.door__floor', { opacity: 0.2, scaleX: 0.6 }, { opacity: 1, scaleX: 1.1, ease: 'none' }, 0);
   gsap.from('.reassure li', { x: 60, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.reassure', start: 'top 85%', once: true } });
 
@@ -342,8 +402,6 @@ function scenes() {
   }
   gsap.from('.ticket', { rotationY: -35, rotationX: 12, y: 80, opacity: 0, duration: 1.4, ease: 'expo.out', scrollTrigger: { trigger: '.ticket', start: 'top 85%', once: true } });
 
-  // FAQ : questions qui arrivent une à une
-  gsap.from('.faq details', { y: 30, opacity: 0, stagger: 0.06, duration: 0.6, ease: 'power3.out', scrollTrigger: { trigger: '.faq', start: 'top 85%', once: true } });
 }
 
 intro();
@@ -353,4 +411,5 @@ ready(() => {
   liveTitles();
   counters();
   portalReveals(document.querySelector('.anniv-teaser'));
+  setTimeout(scrollToHash, 60);
 });

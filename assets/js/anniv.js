@@ -1,6 +1,6 @@
 /* Page « Anniversaire » : bougies qui s'allument, frise du mercredi,
    calculateur, invitations en enveloppes. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces } from './core.js';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces, scrollToHash } from './core.js';
 import { PRICES, INVITATIONS } from './data.js';
 
 /* ---------- Invitations ---------- */
@@ -117,4 +117,5 @@ ready(() => {
   scenes();
   liveTitles();
   portalReveals(document.getElementById('gouter'));
+  setTimeout(scrollToHash, 60);
 });

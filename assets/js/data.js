@@ -40,8 +40,16 @@ export const HOURS = {
     { d: 6, label: 'Samedi', open: '10:00', close: '21:15' },
     { d: 0, label: 'Dimanche', open: '10:00', close: '21:15' },
   ],
-  /* Bandeau saisonnier : texte du site actuel, affiché jusqu'à la date indiquée (à vérifier). */
-  notice: { text: 'Vacances de la Toussaint : nous sommes ouverts du mercredi au dimanche.', until: '2026-11-01' },
+  /* Bandeau saisonnier : texte du site actuel, affiché pendant les vacances (dates à vérifier).
+     Pendant cette période, le statut « ouvert maintenant » n'annonce pas d'heure précise :
+     les horaires de vacances restent à compléter. */
+  notice: {
+    text: 'Vacances de la Toussaint : nous sommes ouverts du mercredi au dimanche.',
+    from: '2026-10-17',
+    until: '2026-11-01',
+    openDays: [3, 4, 5, 6, 0],
+    status: 'Vacances : ouvert du mercredi au dimanche',
+  },
 };
 
 export const WORLDS = {
