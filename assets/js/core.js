@@ -1,9 +1,9 @@
 /* Socle commun aux trois pages : défilement fluide, portail, médias, en-tête,
    mode calme, chrono 60:00, clés cachées, curseur, horaires, transitions. */
-import { SITE, HOURS } from './data.js?v=20261028';
-import { IMAGES } from './images.js?v=20261028';
-import { art, KEY_SVG } from './art.js?v=20261028';
-import { createPortal } from './portal.js?v=20261028';
+import { SITE, HOURS } from './data.js?v=20261028-2';
+import { IMAGES } from './images.js?v=20261028-2';
+import { art, KEY_SVG } from './art.js?v=20261028-2';
+import { createPortal } from './portal.js?v=20261028-2';
 import { Lenis } from './vendor/lenis/index.js';
 
 export const gsap = window.gsap;
@@ -160,6 +160,7 @@ function setMenu(open, { returnFocus = false } = {}) {
   burger.setAttribute('aria-expanded', String(open));
   menu.setAttribute('aria-hidden', String(!open));
   behindMenu().forEach((el) => { el.inert = open; });
+  syncActionbar();
   if (open) { lenis?.stop(); menu.querySelector('a')?.focus(); } else { lenis?.start(); if (returnFocus) burger.focus(); }
 }
 function closeMenu(opts) {
@@ -275,19 +276,24 @@ if (chronoEls.length) {
     },
   });
 }
-/* La barre d'actions mobile s'efface tant que le bouton Réserver de l'ouverture est à l'écran,
-   et prend le relais dès qu'il ne l'est plus (au-dessus ou en dessous). */
+/* La barre d'actions mobile n'apparaît qu'une fois l'ouverture dépassée, et s'efface
+   sur les formulaires, le pied de page et quand le menu est ouvert : elle ne recouvre rien.
+   Sa hauteur réelle (--barres-h) réserve la place sous le dernier bloc. */
 const actionbar = document.querySelector('.actionbar');
-const heroCta = document.querySelector('main > section .btn--book');
+const barInView = new Set();
+function syncActionbar() {
+  actionbar?.classList.toggle('is-on', barInView.size === 0 && !menu?.classList.contains('is-open'));
+}
 if (actionbar) {
-  if (heroCta) {
-    const st = ScrollTrigger.create({
-      trigger: heroCta, start: 'top bottom', end: 'bottom top',
-      onToggle(self) { actionbar.classList.toggle('is-on', !self.isActive); },
-      onRefresh(self) { actionbar.classList.toggle('is-on', !self.isActive); },
-    });
-    actionbar.classList.toggle('is-on', !st.isActive);
-  } else actionbar.classList.add('is-on');
+  const setBarH = () => root.style.setProperty('--barres-h', `${actionbar.offsetHeight}px`);
+  setBarH();
+  new ResizeObserver(setBarH).observe(actionbar);
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) barInView.add(e.target); else barInView.delete(e.target); });
+    syncActionbar();
+  });
+  [document.querySelector('main > section'), ...document.querySelectorAll('main form, .footer')]
+    .filter(Boolean).forEach((el) => { barInView.add(el); io.observe(el); });
 }
 
 /* ---------- Clés cachées ---------- */

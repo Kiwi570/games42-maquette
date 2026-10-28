@@ -7,7 +7,7 @@ import { Program } from './vendor/ogl/core/Program.js';
 import { Mesh } from './vendor/ogl/core/Mesh.js';
 import { Texture } from './vendor/ogl/core/Texture.js';
 import { Triangle } from './vendor/ogl/extras/Triangle.js';
-import { WORLDS } from './data.js?v=20261028';
+import { WORLDS } from './data.js?v=20261028-2';
 
 /* Scènes : image de fond + position du portail dans l'image (x depuis la gauche, y depuis le haut)
    et rayon du portail en fraction de la hauteur de l'image. */

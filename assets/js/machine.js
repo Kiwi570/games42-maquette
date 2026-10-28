@@ -1,8 +1,8 @@
 /* Page « La Machine à remonter le temps » : compte à rebours, horloge à réparer,
    frise des époques, jauges, calculateur de prix. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready, scrollToHash } from './core.js?v=20261028';
-import { gearPath } from './art.js?v=20261028';
-import { PRICES } from './data.js?v=20261028';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready, scrollToHash } from './core.js?v=20261028-2';
+import { gearPath } from './art.js?v=20261028-2';
+import { PRICES } from './data.js?v=20261028-2';
 
 /* ---------- Dessins : engrenages et graduations ---------- */
 document.querySelectorAll('.gear-obj').forEach((p) => p.setAttribute('d', gearPath(42, 42, 24, 10, 0.22)));
@@ -48,6 +48,8 @@ const setFound = (n) => {
 function heroIn() {
   if (calm) return;
   const split = SplitText.create('.m-title', { type: 'words,chars', mask: 'words' });
+  /* Largeur des mots figée à la graisse finale : le titre ne change pas de nombre de lignes pendant l'animation */
+  split.masks.forEach((m) => { m.style.width = `${m.getBoundingClientRect().width}px`; });
   gsap.timeline({ delay: 0.15 })
     .from(split.chars, { yPercent: 115, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.022 })
     .from('.page-hero .badge-new, .page-hero .crumbs', { y: 16, opacity: 0, duration: 0.6, stagger: 0.08 }, 0)

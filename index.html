@@ -22,7 +22,7 @@
   <link rel="preload" href="assets/fonts/fraunces-var.woff" as="font" type="font/woff" crossorigin>
   <link rel="preload" href="assets/fonts/figtree-var.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="assets/css/lenis.css">
-  <link rel="stylesheet" href="assets/css/main.css?v=20261028">
+  <link rel="stylesheet" href="assets/css/main.css?v=20261028-2">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -86,10 +86,19 @@
 </svg>
 
 <div id="portal" aria-hidden="true"></div>
-<div class="notice" data-notice hidden>
-  <p data-notice-text style="margin:0"></p>
+<div class="notice" data-notice data-from="2026-10-17" data-until="2026-11-01" hidden>
+  <p data-notice-text style="margin:0">Vacances de la Toussaint : nous sommes ouverts du mercredi au dimanche.</p>
   <button type="button" aria-label="Fermer le bandeau">×</button>
 </div>
+<script>
+  /* Bandeau affiché avant le premier rendu (sinon il pousse la page à son arrivée) : dates de HOURS.notice dans data.js */
+  (function () {
+    var n = document.currentScript.previousElementSibling;
+    try { if (sessionStorage.getItem('g42-notice') === '1') return; } catch (e) { /* stockage indisponible */ }
+    var d = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
+    if (d >= n.dataset.from && d <= n.dataset.until) n.hidden = false;
+  })();
+</script>
 <header class="header">
   <a class="brand" href="index.html" aria-label="Games 42, retour à l’accueil">
     <img class="brand__mark" src="assets/img/logo-mark.webp" alt="" width="42" height="42">
@@ -659,6 +668,6 @@
 <script src="assets/js/vendor/gsap.min.js" defer></script>
 <script src="assets/js/vendor/ScrollTrigger.min.js" defer></script>
 <script src="assets/js/vendor/SplitText.min.js" defer></script>
-<script type="module" src="assets/js/home.js?v=20261028"></script>
+<script type="module" src="assets/js/home.js?v=20261028-2"></script>
 </body>
 </html>

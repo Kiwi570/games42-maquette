@@ -1,7 +1,7 @@
 /* Page « Anniversaire » : bougies qui s'allument, frise du mercredi,
    calculateur, invitations en enveloppes. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces, scrollToHash } from './core.js?v=20261028';
-import { PRICES, INVITATIONS } from './data.js?v=20261028';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces, scrollToHash } from './core.js?v=20261028-2';
+import { PRICES, INVITATIONS } from './data.js?v=20261028-2';
 
 /* ---------- Invitations ---------- */
 const env = document.querySelector('[data-invitations]');
@@ -93,6 +93,8 @@ function heroIn() {
   const flames = document.querySelectorAll('.candles-row .candle__flame');
   if (calm) { gsap.set(flames, { scale: 1 }); return; }
   const split = SplitText.create('.a-title', { type: 'words,chars', mask: 'words' });
+  /* Largeur des mots figée à la graisse finale : le titre ne change pas de nombre de lignes pendant l'animation */
+  split.masks.forEach((m) => { m.style.width = `${m.getBoundingClientRect().width}px`; });
   const tl = gsap.timeline({ delay: 0.15 });
   tl.from(split.chars, { yPercent: 115, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.02 })
     .from('.page-hero .crumbs, .page-hero .lead, .page-hero .actions > *, .page-hero .proofs li', { y: 24, opacity: 0, duration: 0.7, stagger: 0.06, ease: 'power3.out' }, 0.35)
