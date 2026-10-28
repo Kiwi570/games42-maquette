@@ -1,7 +1,7 @@
 /* Page « Anniversaire » : bougies qui s'allument, frise du mercredi,
    calculateur, invitations en enveloppes. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces, scrollToHash } from './core.js';
-import { PRICES, INVITATIONS } from './data.js';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces, scrollToHash } from './core.js?v=20261028';
+import { PRICES, INVITATIONS } from './data.js?v=20261028';
 
 /* ---------- Invitations ---------- */
 const env = document.querySelector('[data-invitations]');

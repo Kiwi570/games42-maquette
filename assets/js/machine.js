@@ -1,8 +1,8 @@
 /* Page « La Machine à remonter le temps » : compte à rebours, horloge à réparer,
    frise des époques, jauges, calculateur de prix. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready, scrollToHash } from './core.js';
-import { gearPath } from './art.js';
-import { PRICES } from './data.js';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready, scrollToHash } from './core.js?v=20261028';
+import { gearPath } from './art.js?v=20261028';
+import { PRICES } from './data.js?v=20261028';
 
 /* ---------- Dessins : engrenages et graduations ---------- */
 document.querySelectorAll('.gear-obj').forEach((p) => p.setAttribute('d', gearPath(42, 42, 24, 10, 0.22)));

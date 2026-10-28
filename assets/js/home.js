@@ -1,7 +1,7 @@
 /* Page d'accueil : ouverture, cadenas à molettes, couloir des portails,
    coffre, porte, frise, carte, bon cadeau. */
-import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook } from './core.js';
-import { MISSIONS, PRICES, SITE } from './data.js';
+import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook } from './core.js?v=20261028';
+import { MISSIONS, PRICES, SITE } from './data.js?v=20261028';
 
 const SCENE_OF = { sorcier: 'sorcier', temps: 'temps', pirate: 'pirate', cirque: 'cirque', serpent: 'serpent' };
 const euro = (v) => `${Number.isInteger(v) ? v : v.toFixed(2).replace('.', ',')} €`;

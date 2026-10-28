@@ -1,9 +1,9 @@
 /* Socle commun aux trois pages : défilement fluide, portail, médias, en-tête,
    mode calme, chrono 60:00, clés cachées, curseur, horaires, transitions. */
-import { SITE, HOURS } from './data.js';
-import { IMAGES } from './images.js';
-import { art, KEY_SVG } from './art.js';
-import { createPortal } from './portal.js';
+import { SITE, HOURS } from './data.js?v=20261028';
+import { IMAGES } from './images.js?v=20261028';
+import { art, KEY_SVG } from './art.js?v=20261028';
+import { createPortal } from './portal.js?v=20261028';
 import { Lenis } from './vendor/lenis/index.js';
 
 export const gsap = window.gsap;
