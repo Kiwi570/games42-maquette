@@ -1,6 +1,6 @@
 /* Page d'accueil : ouverture, cadenas à molettes, couloir des portails,
    coffre, porte, frise, carte, bon cadeau. */
-import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook, lockLook, padMasks, heroReady, viaVeil, registerScene, sceneChanged, flushRefresh } from './core.js';
+import { gsap, ScrollTrigger, SplitText, calm, fine, portal, scroller, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook, lockLook, padMasks, heroReady, viaVeil, registerScene, sceneChanged, flushRefresh } from './core.js';
 import { MISSIONS, PRICES, SITE } from './data.js';
 
 const SCENE_OF = { sorcier: 'sorcier', temps: 'temps', pirate: 'pirate', cirque: 'cirque', serpent: 'serpent' };
@@ -310,11 +310,13 @@ function scenes() {
       // Aimantation : à l'arrêt du défilement dans le couloir, on se cale sur le monde le plus proche
       let snapping = false;
       let lastDir = 1;
-      const offDir = lenis?.on('scroll', (l) => { if (l.direction && !snapping) lastDir = l.direction; });
+      let prevY = window.scrollY;
+      const onDir = () => { const y = window.scrollY; if (y !== prevY && !snapping) lastDir = y > prevY ? 1 : -1; prevY = y; };
+      window.addEventListener('scroll', onDir, { passive: true });
       const snap = () => {
         flushRefresh();
         const st = move.scrollTrigger;
-        if (!lenis || snapping || !st) return;
+        if (snapping || !st) return;
         const y = window.scrollY;
         if (y <= st.start + 2 || y >= st.end - 2) return;
         // Aimantation douce vers le monde le plus proche (un geste franc, au-delà de 60 %, passe au suivant)
@@ -325,14 +327,14 @@ function scenes() {
         const target = yOf(Math.min(panels.length - 1, Math.max(0, i)));
         if (Math.abs(target - y) < 4) return;
         snapping = true;
-        lenis.scrollTo(target, { duration: 0.9, easing: (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2), onComplete: () => { snapping = false; } });
-        setTimeout(() => { snapping = false; }, 1300);
+        scroller.to(target, { duration: 0.9 });
+        setTimeout(() => { snapping = false; }, 1100);
       };
       let snapTimer = null;
       const snapLater = () => { clearTimeout(snapTimer); snapTimer = setTimeout(snap, 140); };
       ScrollTrigger.addEventListener('scrollEnd', snapLater);
       // Clavier, barre de défilement ou doigt : l'utilisateur reprend la main tout de suite
-      const cancelSnap = () => { clearTimeout(snapTimer); if (snapping) { snapping = false; lenis?.scrollTo(window.scrollY, { immediate: true, force: true }); } };
+      const cancelSnap = () => { clearTimeout(snapTimer); if (snapping) { snapping = false; scroller.cancel(); } };
       window.addEventListener('keydown', cancelSnap);
       window.addEventListener('pointerdown', cancelSnap);
       // Navigation au clavier : un bouton atteint par Tab fait venir son monde à l'écran
@@ -340,10 +342,10 @@ function scenes() {
         const p = e.target.closest('.porte-monde');
         if (!p) return;
         const y = yOf(panels.indexOf(p));
-        if (Math.abs(window.scrollY - y) > 4) { if (lenis) lenis.scrollTo(y, { duration: 0.9, force: true }); else window.scrollTo(0, y); }
+        if (Math.abs(window.scrollY - y) > 4) scroller.to(y, { duration: 0.9 });
       };
       track.addEventListener('focusin', onFocus);
-      cleanup = () => { ScrollTrigger.removeEventListener('scrollEnd', snapLater); clearTimeout(snapTimer); window.removeEventListener('keydown', cancelSnap); window.removeEventListener('pointerdown', cancelSnap); track.removeEventListener('focusin', onFocus); offDir?.(); setAnchorResolver(null); };
+      cleanup = () => { ScrollTrigger.removeEventListener('scrollEnd', snapLater); clearTimeout(snapTimer); window.removeEventListener('keydown', cancelSnap); window.removeEventListener('pointerdown', cancelSnap); track.removeEventListener('focusin', onFocus); window.removeEventListener('scroll', onDir); setAnchorResolver(null); };
       panels.forEach((p) => {
         registerScene(ScrollTrigger.create({ trigger: p, containerAnimation: move, start: 'left 55%', end: 'right 55%', onToggle: sceneChanged }), () => setPanelScene(p), () => move.scrollTrigger.isActive);
         const inner = p.querySelector('.media__inner');

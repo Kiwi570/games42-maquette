@@ -83,14 +83,32 @@ export function renderMedia(scope = document) {
 }
 renderMedia();
 
-/* ---------- Défilement fluide ---------- */
+/* ---------- Défilement ---------- */
+/* Sur Mac, iPhone et iPad (pavé tactile, souris Apple, doigt), le défilement natif est déjà doux et il est
+   calculé hors du fil principal : la page reste fluide même pendant une animation lourde. Le lissage Lenis
+   n'est gardé que pour les molettes à crans (Windows, Linux). ?lenis=1 ou ?lenis=0 pour forcer. */
+const apple = /Mac|iPhone|iPad|iPod/i.test(navigator.userAgentData?.platform || navigator.platform || navigator.userAgent);
+const useLenis = params.get('lenis') === '1' || (params.get('lenis') !== '0' && !calm && fine && !apple);
 export let lenis = null;
-if (!calm) {
-  lenis = new Lenis({ lerp: 0.09, smoothWheel: true, wheelMultiplier: 0.95, autoRaf: false });
+if (useLenis) {
+  lenis = new Lenis({ lerp: 0.1, smoothWheel: true, wheelMultiplier: 0.95, autoRaf: false });
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add((time) => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
 }
+let lastScrollT = 0;
+window.addEventListener('scroll', () => { lastScrollT = performance.now(); }, { passive: true });
+/* Interface commune aux deux modes de défilement */
+export const scroller = {
+  get busy() { return lenis ? !!lenis.isScrolling : performance.now() - lastScrollT < 180; },
+  to(y, { instant = false, duration = 1.2 } = {}) {
+    if (lenis) lenis.scrollTo(y, { duration: instant ? 0 : duration, immediate: instant, force: true });
+    else window.scrollTo({ top: y, behavior: instant || calm ? 'auto' : 'smooth' });
+  },
+  stop() { if (lenis) lenis.stop(); else root.style.overflow = 'hidden'; },
+  start() { if (lenis) lenis.start(); else root.style.overflow = ''; },
+  cancel() { if (lenis) lenis.scrollTo(window.scrollY, { immediate: true, force: true }); },
+};
 /* Certaines cibles vivent dans une section épinglée (couloir horizontal) :
    la page peut fournir la position de défilement exacte qui les montre. */
 let anchorResolver = null;
@@ -101,12 +119,9 @@ export function scrollToTarget(target, { instant = false } = {}) {
   if (!el) return;
   flushRefresh(); // positions à jour avant de viser
   lenis?.resize(); // la hauteur a pu changer (scènes épinglées) : sinon la cible serait tronquée
-  const y = anchorResolver?.(el);
-  if (y != null) {
-    if (lenis) lenis.scrollTo(y, { duration: instant ? 0 : 1.4, immediate: instant, force: true });
-    else window.scrollTo(0, y);
-  } else if (lenis) lenis.scrollTo(el, { offset: -76, duration: instant ? 0 : 1.4, immediate: instant, force: true });
-  else el.scrollIntoView({ behavior: 'auto' });
+  const ry = anchorResolver?.(el);
+  const y = ry != null ? ry : Math.max(0, el.getBoundingClientRect().top + window.scrollY - 76);
+  scroller.to(y, { instant, duration: 1.4 });
   if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
   el.focus({ preventScroll: true });
 }
@@ -208,7 +223,7 @@ function setMenu(open, { returnFocus = false } = {}) {
   burger.setAttribute('aria-expanded', String(open));
   menu.setAttribute('aria-hidden', String(!open));
   behindMenu().forEach((el) => { el.inert = open; });
-  if (open) { lenis?.stop(); menu.querySelector('a')?.focus(); } else { lenis?.start(); if (returnFocus) burger.focus(); }
+  if (open) { scroller.stop(); menu.querySelector('a')?.focus(); } else { scroller.start(); if (returnFocus) burger.focus(); }
 }
 function closeMenu(opts) {
   if (!menu?.classList.contains('is-open')) return;
@@ -552,7 +567,7 @@ function watchHeight() {
   if (!main || !('ResizeObserver' in window)) return;
   lastH = document.documentElement.scrollHeight;
   const run = () => {
-    if (lenis?.isScrolling) { rto = setTimeout(run, 220); return; } // on attend l'arrêt du défilement
+    if (scroller.busy) { rto = setTimeout(run, 220); return; } // on attend l'arrêt du défilement
     refreshPending = false;
     if (Math.abs(document.documentElement.scrollHeight - lastH) < 24) return; // changement passager, déjà résorbé
     ScrollTrigger.refresh();

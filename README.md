@@ -51,3 +51,8 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 - Images du fond décodées hors du fil principal, préchargées pendant les temps morts : aucun à-coup quand un nouveau monde arrive.
 - Le fond ne se fige plus sous les sections claires (il ralentit) : plus de saut quand une section sombre arrive.
 - Titres d'ouverture animés par transformation seulement ; « 4,9 » et ses étoiles ne se chevauchent plus.
+
+## Version 6 (défilement natif sur Mac)
+
+- Sur Mac, iPhone et iPad, le défilement est désormais celui du système (calculé hors du fil principal, il ne peut plus saccader). Le lissage Lenis reste pour les molettes à crans (Windows, Linux). Forcer : `?lenis=1` ou `?lenis=0`.
+- `vercel.json` : scripts et styles toujours revérifiés après une mise en ligne (pas de version périmée en cache).
