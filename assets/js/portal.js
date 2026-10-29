@@ -10,15 +10,19 @@ import { Triangle } from './vendor/ogl/extras/Triangle.js';
 import { WORLDS } from './data.js';
 
 /* Scènes : image de fond + position du portail dans l'image (x depuis la gauche, y depuis le haut)
-   et rayon du portail en fraction de la hauteur de l'image. */
+   et rayon du portail en fraction de la hauteur de l'image.
+   stage (écrans larges) : où poser le portail à l'écran (x en fraction de largeur, rayon en fraction de hauteur) ;
+   il est alors centré verticalement dans la partie visible de l'ouverture, sous l'en-tête. */
 const SCENES = {
-  hero: { land: ['hero-portail', 0.665, 0.48, 0.30], port: ['hero-portail-portrait', 0.5, 0.29, 0.13], world: 'portail' },
+  hero: { land: ['hero-portail', 0.67, 0.461, 0.24], port: ['hero-portail-portrait', 0.505, 0.332, 0.179], stage: { land: { x: 0.71, r: 0.235 }, port: { x: 0.5, r: 0.105 } }, world: 'portail' },
+  // Même image, portail centré à l'écran (appel final « Prêts à passer le portail ? »)
+  portail: { land: ['hero-portail', 0.67, 0.461, 0.24], port: ['hero-portail-portrait', 0.505, 0.332, 0.179], stage: { land: { x: 0.5, y: 0.5, r: 0.3 }, port: { x: 0.5, y: 0.45, r: 0.15 } }, world: 'portail' },
   sorcier: { land: ['monde-sorcier', 0.62, 0.55, 0.22], port: ['monde-sorcier-portrait', 0.58, 0.42, 0.14], world: 'sorcier' },
   temps: { land: ['monde-temps', 0.82, 0.5, 0.36], port: ['monde-temps-portrait', 0.5, 0.42, 0.2], world: 'temps' },
   pirate: { land: ['monde-pirate', 0.66, 0.42, 0.2], port: ['monde-pirate-portrait', 0.5, 0.5, 0.15], world: 'pirate' },
   cirque: { land: ['monde-cirque', 0.5, 0.18, 0.12], port: ['monde-cirque-portrait', 0.5, 0.15, 0.1], world: 'cirque' },
   serpent: { land: ['monde-serpent', 0.38, 0.62, 0.22], port: ['monde-serpent-portrait', 0.42, 0.45, 0.18], world: 'serpent' },
-  machine: { land: ['machine-hero', 0.7, 0.5, 0.34], port: ['machine-hero-portrait', 0.5, 0.21, 0.13], world: 'temps' },
+  machine: { land: ['machine-hero', 0.7, 0.5, 0.34], port: ['machine-hero-portrait', 0.5, 0.288, 0.255], world: 'temps' },
   vortex: { land: ['machine-vortex', 0.57, 0.48, 0.18], port: ['machine-vortex', 0.57, 0.48, 0.18], world: 'temps' },
   fete: { land: ['anniversaire-bougies-flip', 0.82, 0.6, 0.2], port: ['anniversaire-bougies-portrait', 0.5, 0.3, 0.14], world: 'sorcier' },
   nuit: { land: ['frise-ciel', 0.6, 0.45, 0.2], port: ['frise-ciel', 0.6, 0.45, 0.2], world: 'sorcier' },
@@ -39,6 +43,10 @@ uniform sampler2D uT0;
 uniform sampler2D uT1;
 uniform vec2 uS0;
 uniform vec2 uS1;
+uniform float uZ0;
+uniform float uZ1;
+uniform vec2 uO0;
+uniform vec2 uO1;
 uniform float uMix;
 uniform vec2 uC;
 uniform float uR;
@@ -62,10 +70,17 @@ float fbm3(vec2 p) {
   for (int i = 0; i < 3; i++) { v += a * noise(p); p = m * p; a *= 0.5; }
   return v / 0.875;
 }
-vec2 cover(vec2 uv, vec2 img) {
+vec2 mapUV(vec2 uv, vec2 img, float z, vec2 o) {
   float sr = uRes.x / uRes.y; float ir = img.x / img.y;
   vec2 s = sr > ir ? vec2(1.0, ir / sr) : vec2(sr / ir, 1.0);
-  return (uv - 0.5) * s + 0.5;
+  return (uv - 0.5) * s * z + 0.5 + o;
+}
+/* Hors de l'image (portail réduit), on fond doucement vers le bleu nuit */
+const vec3 NUIT = vec3(0.09, 0.07, 0.18);
+vec3 sampleImg(sampler2D t, vec2 p) {
+  vec2 a = smoothstep(vec2(-0.02), vec2(0.24), p) * smoothstep(vec2(1.02), vec2(0.76), p);
+  float m = a.x * a.y;
+  return mix(NUIT, texture2D(t, clamp(p, 0.0, 1.0)).rgb, m * m * (3.0 - 2.0 * m));
 }
 mat2 rot(float a) { float c = cos(a); float s = sin(a); return mat2(c, -s, s, c); }
 
@@ -74,34 +89,36 @@ void main() {
   vec2 uv = vUv;
   vec2 d = (uv - uC) * asp;
   float r = length(d);
-  float R = max(uR, 0.02);
-
-  // Plongée : on zoome vers le centre du portail
-  d *= 1.0 - uDive * 0.55;
+  // Plongée : on s'approche du portail (zoom doux, sans torsion) ; l'anneau d'énergie grandit avec l'image
+  float zoom = 1.0 - uDive * 0.3;
+  float R = max(uR, 0.02) / zoom;
+  d *= zoom;
   // Tourbillon liquide autour du portail
   float fall = smoothstep(R * 2.2, 0.0, r);
-  float ang = uSwirl * fall * (0.35 * sin(uTime * 0.55 + r * 9.0) + 0.25 * sin(uTime * 0.31)) + uDive * fall * 1.2;
+  float ang = uSwirl * fall * (0.35 * sin(uTime * 0.55 + r * 9.0) + 0.25 * sin(uTime * 0.31));
   d = rot(ang) * d;
   vec2 w = vec2(fbm2(uv * 3.0 + uTime * 0.05), fbm2(uv * 3.0 - uTime * 0.04 + 11.3)) - 0.5;
-  vec2 suv = uC + d / asp + w * 0.012 * (0.4 + fall) + uMouse * 0.008;
+  vec2 suv = uC + d / asp + w * 0.012 * (0.4 + fall) + uMouse * 0.004;
 
-  vec3 col = texture2D(uT0, cover(suv, uS0)).rgb;
+  vec3 col = sampleImg(uT0, mapUV(suv, uS0, uZ0, uO0));
 
   // Dissolution lumineuse entre deux mondes (calculée seulement pendant une transition)
   if (uMix > 0.001 && uMix < 0.999) {
-    vec3 c1 = texture2D(uT1, cover(suv, uS1)).rgb;
+    vec3 c1 = sampleImg(uT1, mapUV(suv, uS1, uZ1, uO1));
     float n = fbm3(uv * 3.5 + vec2(0.0, uTime * 0.05));
     float edge = smoothstep(n - 0.08, n + 0.08, uMix * 1.16 - 0.08);
     col = mix(col, c1, edge);
     float front = exp(-pow((uMix * 1.16 - 0.08 - n) * 14.0, 2.0));
     col += mix(uA, uB, n) * front * 1.2;
   } else if (uMix >= 0.999) {
-    col = texture2D(uT1, cover(suv, uS1)).rgb;
+    col = sampleImg(uT1, mapUV(suv, uS1, uZ1, uO1));
   }
 
   // Anneau d'énergie et étincelles (ignorés quand l'anneau est éteint)
   if (uRing > 0.01) {
-    float ringN = fbm2(vec2(atan(d.y, d.x) * 2.0 + uTime * 0.4, r * 6.0 - uTime * 0.6));
+    // Bruit échantillonné sur un cercle : périodique, donc sans raccord visible à gauche de l'anneau
+    vec2 dir = d / max(length(d), 1e-4);
+    float ringN = fbm2(dir * 1.7 + vec2(r * 6.0 - uTime * 0.6, uTime * 0.4));
     float dist = abs(r - R - (ringN - 0.5) * R * 0.18);
     float ring = exp(-dist * dist / (R * R * 0.004 + 0.00002)) * 0.9 + 0.006 * R / (dist + 0.004);
     vec3 ringCol = mix(uA, uB, smoothstep(0.3, 0.8, ringN));
@@ -177,6 +194,7 @@ export function createPortal(container, { calm = false } = {}) {
     uniforms: {
       uTime: { value: 0 }, uRes: { value: [1, 1] }, uMouse: { value: [0, 0] },
       uT0: { value: blank }, uT1: { value: blank }, uS0: { value: [1, 1] }, uS1: { value: [1, 1] },
+      uZ0: { value: 1 }, uZ1: { value: 1 }, uO0: { value: [0, 0] }, uO1: { value: [0, 0] },
       uMix: { value: 0 }, uC: { value: [0.66, 0.52] }, uR: { value: 0.3 }, uSwirl: { value: 1 }, uRing: { value: 1 },
       uDim: { value: 1 }, uDive: { value: 0 }, uA: { value: world }, uB: { value: world2 },
     },
@@ -187,13 +205,38 @@ export function createPortal(container, { calm = false } = {}) {
   let anchor = { x: 0.66, y: 0.48, r: 0.3, w: 1, h: 1 };
   /* Taille du fond : celle du conteneur (100lvh), stable quand la barre d'adresse mobile bouge */
   const size = () => [container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight];
+  /* Milieu vertical de la partie visible de l'ouverture (sous l'en-tête), en fraction de la hauteur du fond */
+  const stageY = () => {
+    const [, sh] = size();
+    // Mobile : le portail se pose dans l'espace qui lui est réservé au-dessus du titre
+    const spot = document.querySelector('.hero__portal-space');
+    if (spot && portrait()) {
+      const b = spot.getBoundingClientRect();
+      if (b.height > 40) return Math.min(0.5, Math.max(0.2, (b.top + window.scrollY + b.height / 2) / sh));
+    }
+    const hero = document.querySelector('main > section');
+    const head = document.querySelector('.header');
+    if (!hero) return 0.5;
+    const top = Math.max(head ? head.getBoundingClientRect().bottom + window.scrollY : 0, hero.getBoundingClientRect().top + window.scrollY);
+    const bottom = Math.min(hero.getBoundingClientRect().bottom + window.scrollY, window.innerHeight);
+    return Math.min(0.72, Math.max(0.4, (top + bottom) / 2 / sh));
+  };
   const place = () => {
     const [sw, sh] = size();
     const sr = sw / sh, ir = anchor.w / anchor.h;
     const s = sr > ir ? [1, ir / sr] : [sr / ir, 1];
+    const st = anchor.stage;
+    if (st && (portrait() || sr >= 1.15)) {
+      const P = [st.x, 1 - (st.y ?? stageY())];
+      const A = [anchor.x, 1 - anchor.y];
+      const z = anchor.r / (s[1] * st.r);
+      state.cx = P[0]; state.cy = P[1]; state.r = st.r;
+      return { z, o: [A[0] - 0.5 - (P[0] - 0.5) * s[0] * z, A[1] - 0.5 - (P[1] - 0.5) * s[1] * z] };
+    }
     state.cx = (anchor.x - 0.5) / s[0] + 0.5;
     state.cy = ((1 - anchor.y) - 0.5) / s[1] + 0.5;
     state.r = anchor.r / s[1];
+    return { z: 1, o: [0, 0] };
   };
 
   let lastW = 0, lastH = 0;
@@ -226,16 +269,17 @@ export function createPortal(container, { calm = false } = {}) {
     const sc = SCENES[name] || SCENES.hero;
     const [key, x, y, r] = portrait() ? sc.port : sc.land;
     const tex = await load(key);
-    return { sc, tex, x, y, r };
+    return { sc, tex, x, y, r, stage: sc.stage ? (portrait() ? sc.stage.port : sc.stage.land) : null };
   };
   async function show(name) {
-    const { sc, tex, x, y, r } = await texFor(name);
+    const { sc, tex, x, y, r, stage } = await texFor(name);
     if (wanted !== name) return;
     if (transitionTween) { transitionTween.kill(); transitionTween = null; }
     u.uT0.value = tex.t; u.uS0.value = [tex.w, tex.h]; state.mix = 0; u.uMix.value = 0;
     colorTo(sc.world);
-    anchor = { x, y, r, w: tex.w, h: tex.h };
-    place();
+    anchor = { x, y, r, stage, w: tex.w, h: tex.h };
+    const m = place();
+    u.uZ0.value = m.z; u.uO0.value = m.o;
     shown = name;
     draw(0);
     requestAnimationFrame(() => markReady());
@@ -244,19 +288,20 @@ export function createPortal(container, { calm = false } = {}) {
   }
   async function dissolve(name) {
     loading = true;
-    const { sc, tex, x, y, r } = await texFor(name);
+    const { sc, tex, x, y, r, stage } = await texFor(name);
     loading = false;
     if (wanted !== name) { if (wanted && wanted !== shown) dissolve(wanted); return; }
     u.uT1.value = tex.t; u.uS1.value = [tex.w, tex.h];
     colorTo(sc.world);
     const prev = { cx: state.cx, cy: state.cy, r: state.r };
-    anchor = { x, y, r, w: tex.w, h: tex.h };
-    place();
+    anchor = { x, y, r, stage, w: tex.w, h: tex.h };
+    const m = place();
+    u.uZ1.value = m.z; u.uO1.value = m.o;
     const next = { cx: state.cx, cy: state.cy, r: state.r };
     Object.assign(state, prev);
     transitionTween = window.gsap.timeline({
       onComplete() {
-        u.uT0.value = tex.t; u.uS0.value = [tex.w, tex.h]; state.mix = 0;
+        u.uT0.value = tex.t; u.uS0.value = [tex.w, tex.h]; u.uZ0.value = m.z; u.uO0.value = m.o; state.mix = 0;
         shown = name; transitionTween = null;
         if (wanted && wanted !== shown) dissolve(wanted);
       },
@@ -293,7 +338,8 @@ export function createPortal(container, { calm = false } = {}) {
     renderer.render({ scene: mesh });
   }
   /* Fluidité : 60 images/s au plus (écrans 120 Hz), et résolution baissée si les images arrivent en retard */
-  let avg = 16.7, frames = 0, good = 0, covered = 0;
+  let avg = 16.7, frames = 0, good = 0, covered = 0, lastScroll = 0;
+  window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
   const setQuality = (q) => {
     quality = q;
     renderer.dpr = baseDpr * quality;
@@ -310,8 +356,9 @@ export function createPortal(container, { calm = false } = {}) {
     if (raw < 100) {
       avg += (raw - avg) * 0.06;
       if (++frames % 90 === 0) {
-        if (avg > 21 && quality > 0.5) { setQuality(Math.max(0.5, quality - 0.15)); good = 0; }
-        else if (avg < 17.5 && quality < 1 && ++good >= 4) { setQuality(Math.min(1, quality + 0.1)); good = 0; }
+        // Un changement de résolution se voit : seulement après 3 constats de lenteur, jamais pendant un défilement
+        if (avg > 22 && quality > 0.6 && now - lastScroll > 800) { if (++good >= 3) { setQuality(Math.max(0.6, quality - 0.2)); good = 0; } }
+        else good = 0;
       }
     }
     if (api.hidden && (++covered % 3)) return;

@@ -271,7 +271,7 @@ function scenes() {
 
   // Plongée dans le portail en quittant l'ouverture
   if (portal && !calm) {
-    gsap.fromTo(portal.state, { dive: 0 }, { dive: 0.6, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 55%', scrub: true } });
+    gsap.fromTo(portal.state, { dive: 0 }, { dive: 0.6, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 55%', scrub: 0.6 } }); // lissé : suit le défilement sans à-coups
     gsap.fromTo('.hero__text', { yPercent: 0, opacity: 1 }, { yPercent: -18, opacity: 0.2, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
   }
 
@@ -317,6 +317,7 @@ function scenes() {
         flushRefresh();
         const st = move.scrollTrigger;
         if (snapping || !st) return;
+        if (scroller.auto) { snapLater(); return; } // un défilement automatique est en cours : on réessaiera après
         const y = window.scrollY;
         if (y <= st.start + 2 || y >= st.end - 2) return;
         // Aimantation douce vers le monde le plus proche (un geste franc, au-delà de 60 %, passe au suivant)

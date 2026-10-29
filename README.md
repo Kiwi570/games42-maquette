@@ -56,3 +56,10 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 
 - Sur Mac, iPhone et iPad, le défilement est désormais celui du système (calculé hors du fil principal, il ne peut plus saccader). Le lissage Lenis reste pour les molettes à crans (Windows, Linux). Forcer : `?lenis=1` ou `?lenis=0`.
 - `vercel.json` : scripts et styles toujours revérifiés après une mise en ligne (pas de version périmée en cache).
+
+## Version 7 (portail de l'ouverture)
+
+- Anneau d'énergie recalé exactement sur l'anneau peint de l'image (il était décalé : effet de double anneau).
+- Portail plus petit et centré dans la partie visible de l'ouverture, sous l'en-tête (ordinateur et mobile) ; bords de l'image fondus dans la nuit.
+- Plongée au défilement adoucie : léger rapprochement sans torsion, lissé ; plus de raccord visible dans l'anneau.
+- Appel final : le portail est centré derrière « Prêts à passer le portail ? ».

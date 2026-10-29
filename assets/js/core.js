@@ -99,9 +99,13 @@ if (useLenis) {
 let lastScrollT = 0;
 window.addEventListener('scroll', () => { lastScrollT = performance.now(); }, { passive: true });
 /* Interface commune aux deux modes de défilement */
+let autoUntil = 0;
 export const scroller = {
   get busy() { return lenis ? !!lenis.isScrolling : performance.now() - lastScrollT < 180; },
+  /* Défilement automatique en cours (ancre, pastille, aimantation) : l'aimantation ne doit pas l'interrompre */
+  get auto() { return performance.now() < autoUntil; },
   to(y, { instant = false, duration = 1.2 } = {}) {
+    autoUntil = performance.now() + (instant ? 120 : duration * 1000 + 350);
     if (lenis) lenis.scrollTo(y, { duration: instant ? 0 : duration, immediate: instant, force: true });
     else window.scrollTo({ top: y, behavior: instant || calm ? 'auto' : 'smooth' });
   },
