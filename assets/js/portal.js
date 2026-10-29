@@ -205,21 +205,26 @@ export function createPortal(container, { calm = false } = {}) {
   let anchor = { x: 0.66, y: 0.48, r: 0.3, w: 1, h: 1 };
   /* Taille du fond : celle du conteneur (100lvh), stable quand la barre d'adresse mobile bouge */
   const size = () => [container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight];
-  /* Milieu vertical de la partie visible de l'ouverture (sous l'en-tête), en fraction de la hauteur du fond */
+  /* Milieu vertical de la partie visible de l'ouverture (sous l'en-tête), en fraction de la hauteur du fond.
+     Calculé sur la mise en page (comme si la page était tout en haut), une seule fois par taille d'écran :
+     le portail ne bouge plus quand on y revient plus bas dans la page (l'en-tête collant faussait le calcul). */
+  let stageCache = null;
   const stageY = () => {
+    if (stageCache !== null) return stageCache;
     const [, sh] = size();
+    const docTop = (el) => { let y = 0; for (let n = el; n; n = n.offsetParent) y += n.offsetTop; return y; };
     // Mobile : le portail se pose dans l'espace qui lui est réservé au-dessus du titre
     const spot = document.querySelector('.hero__portal-space');
-    if (spot && portrait()) {
-      const b = spot.getBoundingClientRect();
-      if (b.height > 40) return Math.min(0.5, Math.max(0.2, (b.top + window.scrollY + b.height / 2) / sh));
+    if (spot && portrait() && spot.offsetHeight > 40) {
+      stageCache = Math.min(0.5, Math.max(0.2, (docTop(spot) + spot.offsetHeight / 2) / sh));
+      return stageCache;
     }
     const hero = document.querySelector('main > section');
-    const head = document.querySelector('.header');
-    if (!hero) return 0.5;
-    const top = Math.max(head ? head.getBoundingClientRect().bottom + window.scrollY : 0, hero.getBoundingClientRect().top + window.scrollY);
-    const bottom = Math.min(hero.getBoundingClientRect().bottom + window.scrollY, window.innerHeight);
-    return Math.min(0.72, Math.max(0.4, (top + bottom) / 2 / sh));
+    if (!hero) return (stageCache = 0.5);
+    const top = docTop(hero);
+    const bottom = Math.min(top + hero.offsetHeight, window.innerHeight);
+    stageCache = Math.min(0.72, Math.max(0.4, (top + bottom) / 2 / sh));
+    return stageCache;
   };
   const place = () => {
     const [sw, sh] = size();
@@ -246,6 +251,7 @@ export function createPortal(container, { calm = false } = {}) {
     // Sur mobile, seule une vraie rotation ou un vrai changement de taille redimensionne le rendu
     if (coarse && w === lastW && Math.abs(h - lastH) < 160) return;
     lastW = w; lastH = h;
+    stageCache = null; // nouvelle taille d'écran : on recalcule la place du portail
     renderer.setSize(w, h);
     u.uRes.value = [gl.canvas.width, gl.canvas.height];
     if (wanted) show(wanted);

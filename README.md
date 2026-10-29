@@ -63,3 +63,8 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 - Portail plus petit et centré dans la partie visible de l'ouverture, sous l'en-tête (ordinateur et mobile) ; bords de l'image fondus dans la nuit.
 - Plongée au défilement adoucie : léger rapprochement sans torsion, lissé ; plus de raccord visible dans l'anneau.
 - Appel final : le portail est centré derrière « Prêts à passer le portail ? ».
+
+## Version 8
+
+- Le portail garde exactement la même place partout où il réapparaît (avis, porte) : sa position est calculée une fois sur la mise en page, et non plus à partir de l'en-tête collant.
+- En-tête opaque : plus de texte qui transparaît derrière.
