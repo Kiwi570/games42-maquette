@@ -73,3 +73,9 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 
 - Nouveau cadenas d'ouverture : cadenas à molettes (comme celui du sélecteur de missions), visible dès le premier affichage, molettes qui s'arrêtent sur 4 et 2, voyant vert, anse qui se lève et pivote, puis un portail circulaire s'ouvre depuis le cadenas et révèle la page. Un clic ou la molette accélèrent l'ouverture.
 - Le cadenas n'est plus coupé en haut.
+
+## Version 10 (avis)
+
+- La note 4,9 ne fait plus sauter la section : les chiffres n'étaient pas de même largeur pendant le comptage, et le bloc étoiles + texte passait sans arrêt d'à côté à en dessous du chiffre.
+- Nouvelle animation de la note : deux molettes (comme celles du cadenas d'ouverture) roulent dans une fenêtre en fondu et s'arrêtent sur 4 puis sur 9, puis les étoiles se remplissent. La place de chaque chiffre est réservée dès le départ : rien ne bouge autour.
+- « 1 300 avis » est affiché directement (le petit compteur gênait la lecture de la phrase).

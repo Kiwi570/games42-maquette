@@ -1,6 +1,6 @@
 /* Page d'accueil : ouverture, cadenas à molettes, couloir des portails,
    coffre, porte, frise, carte, bon cadeau. */
-import { gsap, ScrollTrigger, SplitText, calm, fine, portal, scroller, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook, lockLook, padMasks, heroReady, viaVeil, registerScene, sceneChanged, flushRefresh } from './core.js';
+import { gsap, ScrollTrigger, SplitText, calm, fine, portal, scroller, renderMedia, trackScenes, liveTitles, counters, rollDigits, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook, lockLook, padMasks, heroReady, viaVeil, registerScene, sceneChanged, flushRefresh } from './core.js';
 import { MISSIONS, PRICES, SITE } from './data.js';
 
 const SCENE_OF = { sorcier: 'sorcier', temps: 'temps', pirate: 'pirate', cirque: 'cirque', serpent: 'serpent' };
@@ -283,6 +283,23 @@ function intro() {
   ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach((ev) => window.addEventListener(ev, hurry, { once: true, passive: true }));
 }
 
+/* ---------- La note des avis ----------
+   Les chiffres roulent comme les molettes du cadenas d'ouverture, puis les étoiles se remplissent.
+   Aucune largeur ne change pendant l'animation : plus de bloc qui saute d'une ligne à l'autre. */
+function scoreIn() {
+  const score = document.querySelector('.score');
+  if (!score) return;
+  const tl = gsap.timeline({ paused: true });
+  const big = score.querySelector('.score__num[data-roll]');
+  // Le 9 fait deux tours, le 4 un seul : les molettes s'arrêtent l'une après l'autre
+  if (big) rollDigits(big, (i) => 1 + Math.min(i, 1)).forEach(({ strip, end }, i) => {
+    tl.fromTo(strip, { yPercent: 0 }, { yPercent: end, duration: 1.5 + i * 0.35, ease: 'power3.inOut' }, i * 0.08);
+  });
+  const stars = score.querySelectorAll('.score__stars svg');
+  tl.fromTo(stars, { scale: 0, rotate: -90 }, { scale: 1, rotate: 0, stagger: 0.09, duration: 0.6, ease: 'back.out(2.2)', clearProps: 'transform' }, 1.15);
+  ScrollTrigger.create({ trigger: score, start: 'top 92%', once: true, onEnter: () => tl.play() });
+}
+
 /* ---------- Scènes de défilement ---------- */
 function scenes() {
   const mm = gsap.matchMedia();
@@ -428,8 +445,8 @@ function scenes() {
   ft.from('.frise__time, .frise__what', { y: 14, opacity: 0, stagger: 0.06, duration: 0.5 }, 0.1);
   gsap.from('.big-price strong', { scale: 0.6, opacity: 0, duration: 1, ease: 'elastic.out(1, .5)', scrollTrigger: { trigger: '.big-price', start: 'top 85%', once: true } });
 
-  // Étoiles qui se remplissent
-  gsap.from('.score__stars svg', { scale: 0, rotate: -90, stagger: 0.12, duration: 0.7, ease: 'back.out(2.5)', scrollTrigger: { trigger: '.score', start: 'top 80%', once: true } });
+  // La note : les chiffres roulent comme les molettes du cadenas, puis les étoiles se remplissent
+  scoreIn();
 
   // Pros : cartes qui s'empilent
   gsap.from('.pro', { y: 80, opacity: 0, stagger: 0.12, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '.pros__grid', start: 'top 85%', once: true } });

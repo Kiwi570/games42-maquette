@@ -463,6 +463,18 @@ html:not(.js) .intro, .calme .intro, .intro-seen .intro, .veil-in .intro { displ
 @media (min-width: 900px) { .preuves__grid { grid-template-columns: 1.1fr .9fr; } }
 .score { display: flex; align-items: flex-end; column-gap: 1.4rem; row-gap: clamp(1.6rem, 4vw, 3rem); flex-wrap: wrap; } /* la virgule du 4,9 descend : de la place sous le chiffre */
 .score__num { font-family: var(--f-display); font-weight: 700; font-size: clamp(6rem, 18vw, 15rem); line-height: .8; letter-spacing: -0.04em; font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1; }
+/* Molettes de chiffres : le chiffre final (transparent) donne la largeur, la bande défile par-dessus.
+   La fenêtre déborde de 0,35em autour du chiffre et s'estompe en haut et en bas ; le pas de la bande
+   (hauteur de ligne + 0,7em) laisse les chiffres voisins hors de la fenêtre une fois arrêtée. */
+.roll { position: relative; display: inline-block; padding: .35em .15em; margin: -.35em -.15em;
+  -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent); }
+.roll__size { opacity: 0; }
+.roll__strip { position: absolute; inset: 0 0 auto; display: flex; flex-direction: column; align-items: center; line-height: calc(var(--roll-l, 1.2) * 1em + .7em); }
+.roll__strip > span { display: block; }
+/* Compteur : la valeur finale réserve sa place dans la phrase, le chiffre qui défile est posé dessus */
+.count { position: relative; display: inline-block; }
+.count__ghost { opacity: 0; }
+.count__live { position: absolute; left: 0; top: 0; white-space: nowrap; }
 .score__stars { display: flex; gap: .3rem; margin-bottom: 1rem; }
 .score__stars svg { width: clamp(26px, 3.4vw, 40px); height: auto; }
 .score__stars svg { color: var(--serpent); }

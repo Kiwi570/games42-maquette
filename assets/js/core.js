@@ -469,19 +469,64 @@ export function liveTitles(scope = document) {
 /* L'ouverture de page est prête : on lève le masque posé dès le premier affichage. */
 export function heroReady() { root.classList.add('hero-ready'); }
 
+/* ---------- Chiffres en molettes ----------
+   Chaque chiffre devient une petite molette : le chiffre final (transparent, lu par les lecteurs d'écran)
+   réserve sa largeur exacte, et une bande de chiffres glisse par-dessus (simple translation).
+   La mise en page ne bouge donc pas pendant l'animation. turns(i) : nombre de tours de la i-e molette. */
+export function rollDigits(el, turns = () => 1) {
+  const final = el.textContent.trim();
+  const cs = getComputedStyle(el);
+  const lh = parseFloat(cs.lineHeight) / parseFloat(cs.fontSize);
+  el.style.setProperty('--roll-l', Number.isFinite(lh) ? lh.toFixed(3) : '1.2');
+  el.textContent = '';
+  const cols = [];
+  [...final].forEach((ch) => {
+    if (!/\d/.test(ch)) { el.append(ch); return; }
+    const col = document.createElement('span');
+    col.className = 'roll';
+    const size = document.createElement('span');
+    size.className = 'roll__size';
+    size.textContent = ch;
+    const strip = document.createElement('span');
+    strip.className = 'roll__strip';
+    strip.setAttribute('aria-hidden', 'true');
+    const seq = Array.from({ length: 10 * turns(cols.length) + Number(ch) + 1 }, (_, k) => k % 10);
+    seq.forEach((k) => { const s = document.createElement('span'); s.textContent = k; strip.append(s); });
+    col.append(size, strip);
+    el.append(col);
+    cols.push({ strip, end: -((seq.length - 1) / seq.length) * 100 });
+  });
+  return cols;
+}
+
 /* ---------- Compteurs ---------- */
 export function counters(scope = document) {
   scope.querySelectorAll('[data-count]').forEach((el) => {
     const end = parseFloat(el.dataset.count);
     const dec = (el.dataset.count.split('.')[1] || '').length;
     const nf = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    if (calm) { el.textContent = nf.format(end); return; }
+    /* La valeur finale, invisible, garde sa place dans la ligne : le chiffre qui défile est posé
+       par-dessus. La phrase ne bouge plus et ne change plus de ligne pendant le comptage. */
+    const ghost = document.createElement('span');
+    ghost.className = 'count__ghost';
+    ghost.textContent = nf.format(end);
+    const live = document.createElement('span');
+    live.className = 'count__live';
+    live.setAttribute('aria-hidden', 'true');
+    el.classList.add('count');
+    el.replaceChildren(ghost, live);
     let shownTxt = '';
-    // Le texte n'est réécrit que lorsqu'il change (moins de recalculs pour les grands chiffres)
-    const out = (v) => { const t = nf.format(v); if (t !== shownTxt) { el.textContent = t; shownTxt = t; } };
-    if (calm) { out(end); return; }
+    // Le texte n'est réécrit que lorsqu'il change
+    const out = (v) => { const t = nf.format(v); if (t !== shownTxt) { live.textContent = t; shownTxt = t; } };
     const o = { v: 0 };
     out(0);
-    gsap.to(o, { v: end, duration: 2, ease: 'power3.out', onUpdate: () => out(o.v), scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
+    const group = el.closest('[data-count-group]');
+    gsap.to(o, {
+      v: end, duration: 2, delay: group ? 0.35 : 0, ease: 'power3.out', onUpdate: () => out(o.v),
+      onComplete: () => { el.textContent = nf.format(end); el.classList.remove('count'); },
+      scrollTrigger: { trigger: group || el, start: group ? 'top 80%' : 'top 85%', once: true },
+    });
   });
 }
 
