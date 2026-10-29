@@ -263,8 +263,20 @@ h4 { font-size: 1.1rem; margin: 0 0 .4rem; }
 @keyframes flame { from { transform: scale(1, 1) skewX(0); } to { transform: scale(.92, 1.06) skewX(3deg); } }
 
 /* ---------- Intro (ouverture orchestrée) ---------- */
-.intro { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: var(--nuit); pointer-events: none; }
-.intro svg { width: 120px; height: 150px; color: var(--lune); }
+.intro {
+  position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: var(--nuit); pointer-events: none;
+  /* Ouverture : un trou circulaire s'agrandit depuis le cadenas et révèle la page (comme un portail qui s'ouvre) */
+  --hole: 0px;
+  -webkit-mask: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1px));
+  mask: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1px));
+}
+.intro__lock { width: min(150px, 36vw); height: auto; overflow: visible; filter: drop-shadow(0 18px 40px rgba(8, 5, 20, .6)) drop-shadow(0 0 34px rgba(142, 92, 255, .28)); }
+.intro__strip text { font-family: var(--f-display); font-weight: 700; font-size: 30px; fill: var(--lune); font-variation-settings: 'opsz' 48, 'SOFT' 100; }
+.intro__ring {
+  position: absolute; left: 50%; top: 50%; width: 100px; height: 100px; margin: -50px 0 0 -50px; border-radius: 50%;
+  border: 2px solid rgba(243, 239, 250, .95); box-shadow: 0 0 34px rgba(201, 178, 255, .85), inset 0 0 26px rgba(201, 178, 255, .55);
+  opacity: 0; transform: scale(0); will-change: transform;
+}
 html:not(.js) .intro, .calme .intro, .intro-seen .intro, .veil-in .intro { display: none; }
 
 /* ---------- Héro accueil ---------- */
@@ -802,7 +814,7 @@ html.js:not(.calme):not(.titles-ready) [data-split] { visibility: hidden; }
 @media (min-width: 760px) { .results__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1200px) { .pro--wide { grid-column: span 2; } }
 .couloir__pin { position: relative; }
-.intro { animation: intro-safety .5s 4.5s forwards; }
+.intro { animation: intro-safety .5s 6.5s forwards; }
 @keyframes intro-safety { to { opacity: 0; visibility: hidden; } }
 .who .media { background: transparent; }
 .who .media img { filter: grayscale(1) contrast(1.05); }

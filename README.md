@@ -68,3 +68,8 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 
 - Le portail garde exactement la même place partout où il réapparaît (avis, porte) : sa position est calculée une fois sur la mise en page, et non plus à partir de l'en-tête collant.
 - En-tête opaque : plus de texte qui transparaît derrière.
+
+## Version 9 (ouverture)
+
+- Nouveau cadenas d'ouverture : cadenas à molettes (comme celui du sélecteur de missions), visible dès le premier affichage, molettes qui s'arrêtent sur 4 et 2, voyant vert, anse qui se lève et pivote, puis un portail circulaire s'ouvre depuis le cadenas et révèle la page. Un clic ou la molette accélèrent l'ouverture.
+- Le cadenas n'est plus coupé en haut.

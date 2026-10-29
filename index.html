@@ -61,10 +61,24 @@
 </head>
 <body class="page-home">
 <div class="intro" aria-hidden="true">
-  <svg viewBox="0 0 120 150">
-    <path class="intro__shackle" d="M30 70 V44 a30 30 0 0 1 60 0 V70" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
-    <rect x="14" y="66" width="92" height="76" rx="16" fill="currentColor"/>
-    <circle cx="60" cy="98" r="9" fill="#17122E"/><rect x="56" y="100" width="8" height="22" rx="3" fill="#17122E"/>
+  <div class="intro__ring"></div>
+  <svg class="intro__lock" viewBox="0 0 160 200">
+    <defs>
+      <linearGradient id="in-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7F4FC"/><stop offset="1" stop-color="#C9C0E2"/></linearGradient>
+      <linearGradient id="in-shackle" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b80b4"/><stop offset=".5" stop-color="#F3EFFA"/><stop offset="1" stop-color="#7a70a6"/></linearGradient>
+      <linearGradient id="in-win" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f0b22"/><stop offset=".3" stop-color="#221a45"/><stop offset=".7" stop-color="#221a45"/><stop offset="1" stop-color="#0f0b22"/></linearGradient>
+      <clipPath id="in-w1"><rect x="45" y="112" width="30" height="46" rx="9"/></clipPath>
+      <clipPath id="in-w2"><rect x="85" y="112" width="30" height="46" rx="9"/></clipPath>
+    </defs>
+    <path class="intro__shackle" d="M50 96 V62 a30 30 0 0 1 60 0 V96" fill="none" stroke="url(#in-shackle)" stroke-width="12" stroke-linecap="round"/>
+    <rect x="22" y="88" width="116" height="96" rx="24" fill="url(#in-body)"/>
+    <rect x="45" y="112" width="30" height="46" rx="9" fill="url(#in-win)"/>
+    <rect x="85" y="112" width="30" height="46" rx="9" fill="url(#in-win)"/>
+    <g clip-path="url(#in-w1)"><g class="intro__strip" data-final="4"><text x="60" y="146" text-anchor="middle">0</text><text x="60" y="186" text-anchor="middle">1</text><text x="60" y="226" text-anchor="middle">2</text><text x="60" y="266" text-anchor="middle">3</text><text x="60" y="306" text-anchor="middle">4</text><text x="60" y="346" text-anchor="middle">5</text><text x="60" y="386" text-anchor="middle">6</text><text x="60" y="426" text-anchor="middle">7</text><text x="60" y="466" text-anchor="middle">8</text><text x="60" y="506" text-anchor="middle">9</text><text x="60" y="546" text-anchor="middle">0</text><text x="60" y="586" text-anchor="middle">1</text><text x="60" y="626" text-anchor="middle">2</text><text x="60" y="666" text-anchor="middle">3</text><text x="60" y="706" text-anchor="middle">4</text><text x="60" y="746" text-anchor="middle">5</text><text x="60" y="786" text-anchor="middle">6</text><text x="60" y="826" text-anchor="middle">7</text><text x="60" y="866" text-anchor="middle">8</text><text x="60" y="906" text-anchor="middle">9</text></g></g>
+    <g clip-path="url(#in-w2)"><g class="intro__strip" data-final="2"><text x="100" y="146" text-anchor="middle">0</text><text x="100" y="186" text-anchor="middle">1</text><text x="100" y="226" text-anchor="middle">2</text><text x="100" y="266" text-anchor="middle">3</text><text x="100" y="306" text-anchor="middle">4</text><text x="100" y="346" text-anchor="middle">5</text><text x="100" y="386" text-anchor="middle">6</text><text x="100" y="426" text-anchor="middle">7</text><text x="100" y="466" text-anchor="middle">8</text><text x="100" y="506" text-anchor="middle">9</text><text x="100" y="546" text-anchor="middle">0</text><text x="100" y="586" text-anchor="middle">1</text><text x="100" y="626" text-anchor="middle">2</text><text x="100" y="666" text-anchor="middle">3</text><text x="100" y="706" text-anchor="middle">4</text><text x="100" y="746" text-anchor="middle">5</text><text x="100" y="786" text-anchor="middle">6</text><text x="100" y="826" text-anchor="middle">7</text><text x="100" y="866" text-anchor="middle">8</text><text x="100" y="906" text-anchor="middle">9</text></g></g>
+    <rect class="intro__win" x="45" y="112" width="30" height="46" rx="9" fill="none" stroke="#8E5CFF" stroke-width="2"/>
+    <rect class="intro__win" x="85" y="112" width="30" height="46" rx="9" fill="none" stroke="#8E5CFF" stroke-width="2"/>
+    <circle cx="80" cy="171" r="3" fill="#8E5CFF" class="intro__led"/>
   </svg>
 </div>
 <a class="skip" href="#contenu">Aller au contenu</a>

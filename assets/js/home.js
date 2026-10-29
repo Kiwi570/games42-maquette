@@ -252,17 +252,35 @@ function intro() {
   }
   try { sessionStorage.setItem('g42-intro', '1'); } catch { /* sans stockage */ }
   lockLook(true);
-  const svg = el.querySelector('svg');
+  /* Le cadenas à molettes de Games 42 : les deux molettes tournent et s'arrêtent sur 4 et 2, le voyant passe
+     au vert, l'anse se lève, puis un portail circulaire s'ouvre depuis le cadenas et révèle la page. */
+  const lock = el.querySelector('.intro__lock');
   const shackle = el.querySelector('.intro__shackle');
-  if (portal) Object.assign(portal.state, { dim: 0.15, ring: 0, swirl: 3 });
+  const ring = el.querySelector('.intro__ring');
+  const wins = el.querySelectorAll('.intro__win');
+  const led = el.querySelector('.intro__led');
+  const STEP = 40; // chiffres écrits dans la page (visibles dès le premier affichage), espacés de 40
+  const strips = [...el.querySelectorAll('.intro__strip')];
+  const R = Math.hypot(window.innerWidth, window.innerHeight) / 2 + 80;
+  if (portal) Object.assign(portal.state, { dim: 0.12, ring: 0, swirl: 2.5 });
   const tl = gsap.timeline();
-  tl.from(svg, { scale: 0.7, opacity: 0, duration: 0.45, ease: 'power3.out' })
-    .to(shackle, { y: -16, duration: 0.3, ease: 'back.out(3)' }, 0.5)
-    .to(svg, { scale: 7, opacity: 0, duration: 0.75, ease: 'expo.in' }, 0.85)
-    .to(el, { opacity: 0, duration: 0.45, onComplete: () => el.remove() }, 1.2)
-    .call(() => lockLook(false), null, 2.6);
-  if (portal) tl.to(portal.state, { dim: 1, ring: 1, swirl: 1, duration: 1.6, ease: 'power2.out' }, 0.95);
-  tl.add(heroIn(), 1.15);
+  // Le cadenas est déjà affiché pendant le chargement : il « respire » puis les molettes tournent
+  tl.to(lock, { scale: 1.03, duration: 0.3, ease: 'power2.out', yoyo: true, repeat: 1 }, 0)
+    .fromTo(strips[0], { y: 0 }, { y: -(10 + Number(strips[0].dataset.final)) * STEP, duration: 1.05, ease: 'power3.inOut' }, 0.1)
+    .fromTo(strips[1], { y: 0 }, { y: -(10 + Number(strips[1].dataset.final)) * STEP, duration: 1.2, ease: 'power3.inOut' }, 0.16)
+    .call(() => { wins.forEach((w) => w.setAttribute('stroke', '#45D49B')); led.setAttribute('fill', '#45D49B'); }, null, 1.42)
+    .to(lock, { scale: 1.04, duration: 0.12, yoyo: true, repeat: 1, ease: 'power1.out' }, 1.42)
+    .to(shackle, { y: -22, duration: 0.34, ease: 'back.out(3)' }, 1.48)
+    .to(shackle, { rotation: -14, svgOrigin: '110 96', duration: 0.42, ease: 'back.out(2)' }, 1.62)
+    .to(lock, { scale: 1.45, opacity: 0, duration: 0.5, ease: 'power2.in' }, 1.88)
+    .fromTo(ring, { scale: 0, opacity: 1 }, { scale: R / 50, opacity: 0.25, duration: 0.95, ease: 'power3.in' }, 1.96)
+    .fromTo(el, { '--hole': '0px' }, { '--hole': `${R}px`, duration: 0.95, ease: 'power3.in', onComplete: () => el.remove() }, 1.96)
+    .call(() => lockLook(false), null, 3.2);
+  if (portal) tl.to(portal.state, { dim: 1, ring: 1, swirl: 1, duration: 1.5, ease: 'power2.out' }, 1.9);
+  tl.add(heroIn(), 2.2);
+  // Un clic, une touche ou la molette accélèrent l'ouverture
+  const hurry = () => tl.timeScale(3);
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach((ev) => window.addEventListener(ev, hurry, { once: true, passive: true }));
 }
 
 /* ---------- Scènes de défilement ---------- */
