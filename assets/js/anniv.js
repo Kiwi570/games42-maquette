@@ -97,7 +97,7 @@ function heroIn() {
   const split = SplitText.create('.a-title', { type: 'words,chars', mask: 'words' });
   padMasks(split);
   const tl = gsap.timeline({ delay: heroDelay, onComplete: () => split.revert() });
-  tl.from(split.chars, { yPercent: 125, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.02 })
+  tl.from(split.chars, { yPercent: 125, duration: 1.1, ease: 'expo.out', stagger: 0.02, force3D: true })
     .from('.page-hero .crumbs, .page-hero .lead, .page-hero .actions > *, .page-hero .proofs li', { y: 24, opacity: 0, duration: 0.7, stagger: 0.06, ease: 'power3.out' }, 0.35)
     .from('.candles-hero .media', { clipPath: 'circle(0% at 50% 80%)', duration: 1.4, ease: 'expo.inOut' }, 0.2)
     .from('.candles-row .candle', { y: 60, opacity: 0, stagger: 0.08, duration: 0.7, ease: 'back.out(2)' }, 0.8);
@@ -115,11 +115,10 @@ function scenes() {
   gsap.from('.faq details', { y: 30, opacity: 0, stagger: 0.06, duration: 0.6, ease: 'power3.out', scrollTrigger: { trigger: '.faq', start: 'top 85%', once: true } });
 }
 
-heroIn();
 ready(() => {
   trackScenes();
   scenes();
   liveTitles();
   portalReveals(document.getElementById('gouter'));
   setTimeout(scrollToHash, 60);
-});
+}, heroIn);

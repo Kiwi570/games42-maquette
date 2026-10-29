@@ -50,7 +50,7 @@ function heroIn() {
   const split = SplitText.create('.m-title', { type: 'words,chars', mask: 'words' });
   padMasks(split);
   gsap.timeline({ delay: heroDelay, onComplete: () => split.revert() })
-    .from(split.chars, { yPercent: 125, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.022 })
+    .from(split.chars, { yPercent: 125, duration: 1.1, ease: 'expo.out', stagger: 0.022, force3D: true })
     .from('.page-hero .badge-new, .page-hero .crumbs', { y: 16, opacity: 0, duration: 0.6, stagger: 0.08 }, 0)
     .from('.page-hero .lead, .countdown, .page-hero .facts li, .page-hero .actions > *', { y: 24, opacity: 0, duration: 0.7, stagger: 0.06, ease: 'power3.out' }, 0.4);
   heroReady();
@@ -132,10 +132,9 @@ document.querySelectorAll('[data-stepper]').forEach((st) => {
 });
 
 setFound(0);
-heroIn();
 ready(() => {
   trackScenes();
   scenes();
   liveTitles();
   setTimeout(scrollToHash, 60);
-});
+}, heroIn);

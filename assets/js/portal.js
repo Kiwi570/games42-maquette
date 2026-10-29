@@ -124,7 +124,9 @@ const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
 
 export function createPortal(container, { calm = false } = {}) {
   const state = { cx: 0.66, cy: 0.52, r: 0.3, ring: 1, swirl: 1, dim: 1, dive: 0, mix: 0 };
-  const api = { state, ok: false, hidden: false, setScene: () => {}, render: () => {} };
+  /* ready : résolue quand la première image du fond est affichée (les animations d'ouverture l'attendent) */
+  let markReady;
+  const api = { state, ok: false, hidden: false, setScene: () => {}, render: () => {}, preload: () => {}, ready: new Promise((r) => { markReady = r; }) };
   const portrait = () => window.innerWidth / window.innerHeight < 0.85;
 
   let gl, renderer, program, mesh;
@@ -154,12 +156,15 @@ export function createPortal(container, { calm = false } = {}) {
     const p = new Promise((resolve) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => {
+      const done = () => {
         const t = new Texture(gl, { image: img, generateMipmaps: false, minFilter: gl.LINEAR, magFilter: gl.LINEAR, wrapS: gl.CLAMP_TO_EDGE, wrapT: gl.CLAMP_TO_EDGE });
+        try { t.update(); } catch { /* envoi au premier affichage */ }
         resolve({ t, w: img.naturalWidth, h: img.naturalHeight });
       };
       img.onerror = () => resolve({ t: blank, w: 1, h: 1 });
       img.src = `assets/img/${key}.webp`;
+      // decode() évite un décodage bloquant au moment de l'envoi de la texture
+      (img.decode ? img.decode() : new Promise((r, j) => { img.onload = r; img.onerror = j; })).then(done, () => { if (img.complete && img.naturalWidth) done(); });
     });
     cache.set(key, p);
     return p;
@@ -233,6 +238,7 @@ export function createPortal(container, { calm = false } = {}) {
     place();
     shown = name;
     draw(0);
+    requestAnimationFrame(() => markReady());
     // Première image prête : le fond apparaît en fondu au lieu de surgir
     if (!container.classList.contains('is-ready')) requestAnimationFrame(() => container.classList.add('is-ready'));
   }
@@ -287,7 +293,7 @@ export function createPortal(container, { calm = false } = {}) {
     renderer.render({ scene: mesh });
   }
   /* Fluidité : 60 images/s au plus (écrans 120 Hz), et résolution baissée si les images arrivent en retard */
-  let avg = 16.7, frames = 0, good = 0;
+  let avg = 16.7, frames = 0, good = 0, covered = 0;
   const setQuality = (q) => {
     quality = q;
     renderer.dpr = baseDpr * quality;
@@ -308,7 +314,8 @@ export function createPortal(container, { calm = false } = {}) {
         else if (avg < 17.5 && quality < 1 && ++good >= 4) { setQuality(Math.min(1, quality + 0.1)); good = 0; }
       }
     }
-    if (!api.hidden) draw(Math.min(0.05, raw / 1000));
+    if (api.hidden && (++covered % 3)) return;
+    draw(Math.min(0.05, raw / 1000 * (api.hidden ? 3 : 1)));
   }
   document.addEventListener('visibilitychange', () => {
     if (calm) return;
@@ -321,11 +328,18 @@ export function createPortal(container, { calm = false } = {}) {
   if (running) requestAnimationFrame(loop);
   api.setScene = setScene;
   api.render = () => draw(0);
+  api.preload = (names) => {
+    const keys = [...new Set(names.map((n) => { const sc = SCENES[n] || SCENES.hero; return (portrait() ? sc.port : sc.land)[0]; }))];
+    const idle = window.requestIdleCallback || ((f) => setTimeout(f, 200));
+    const next = () => { const k = keys.shift(); if (!k) return; load(k).then(() => idle(next, { timeout: 2500 })); };
+    idle(next, { timeout: 2500 });
+  };
   return api;
 }
 
 function fallback(container, api, portrait) {
   container.classList.add('portal--css');
+  api.ready = Promise.resolve();
   const layers = [document.createElement('div'), document.createElement('div')];
   layers.forEach((l) => { l.className = 'portal__layer'; container.appendChild(l); });
   let front = 0;

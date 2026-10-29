@@ -44,3 +44,10 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 - Fond WebGL : calcul par pixel divisé par deux, 60 images/s au plus, résolution qui baisse toute seule si l'ordinateur peine.
 - Plus de recalcul des positions en plein défilement ; titres animés sans graisse variable ; barres et aiguilles animées par transformation.
 - Couloir : aimantation douce vers le monde le plus proche, annulée dès que l'on reprend la main ; en-tête masqué pendant les scènes épinglées.
+
+## Version 5 (démarrage et arrivées)
+
+- Ouverture orchestrée : polices chargées, scènes calculées et première image du fond affichée avant toute animation (plus de saccade au démarrage).
+- Images du fond décodées hors du fil principal, préchargées pendant les temps morts : aucun à-coup quand un nouveau monde arrive.
+- Le fond ne se fige plus sous les sections claires (il ralentit) : plus de saut quand une section sombre arrive.
+- Titres d'ouverture animés par transformation seulement ; « 4,9 » et ses étoiles ne se chevauchent plus.

@@ -455,7 +455,10 @@ export function counters(scope = document) {
   scope.querySelectorAll('[data-count]').forEach((el) => {
     const end = parseFloat(el.dataset.count);
     const dec = (el.dataset.count.split('.')[1] || '').length;
-    const out = (v) => { el.textContent = v.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec }); };
+    const nf = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    let shownTxt = '';
+    // Le texte n'est réécrit que lorsqu'il change (moins de recalculs pour les grands chiffres)
+    const out = (v) => { const t = nf.format(v); if (t !== shownTxt) { el.textContent = t; shownTxt = t; } };
     if (calm) { out(end); return; }
     const o = { v: 0 };
     out(0);
@@ -562,10 +565,30 @@ function watchHeight() {
     rto = setTimeout(run, 160);
   }).observe(main);
 }
-export function ready(fn) {
-  // Les scènes épinglées passent en premier : les positions des sections suivantes en tiennent compte
-  const go = () => { fn(); ScrollTrigger.sort(); ScrollTrigger.refresh(); watchHeight(); sceneChanged(); };
-  if (document.fonts?.ready) document.fonts.ready.then(go); else go();
+/* Démarrage en deux temps, pour des animations d'ouverture parfaitement fluides :
+   1. polices chargées, puis mise en place des scènes et calcul des positions (travail lourd) ;
+   2. première image du fond affichée, deux images d'attente, puis seulement l'animation d'ouverture.
+   Aucune animation ne tourne pendant le chargement des polices ou l'envoi des textures. */
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const frame = () => new Promise((r) => requestAnimationFrame(() => r()));
+export function ready(fn, after) {
+  // Les deux familles sont demandées explicitement : on ne démarre pas avec une police de secours
+  const fonts = document.fonts?.load
+    ? Promise.race([Promise.all([document.fonts.load('640 1em Fraunces'), document.fonts.load('400 1em Figtree')]).then(() => document.fonts.ready), wait(1800)])
+    : Promise.resolve();
+  fonts.then(async () => {
+    // Les scènes épinglées passent en premier : les positions des sections suivantes en tiennent compte
+    fn();
+    ScrollTrigger.sort();
+    ScrollTrigger.refresh();
+    watchHeight();
+    sceneChanged();
+    await Promise.race([portal?.ready || Promise.resolve(), wait(1500)]);
+    await frame(); await frame();
+    after?.();
+    // Les autres mondes de la page se préparent ensuite, pendant les temps morts
+    setTimeout(() => portal?.preload?.([...document.querySelectorAll('[data-scene]')].map((e) => e.dataset.scene)), 1200);
+  });
 }
 
 /* ---------- FAQ : ouverture et fermeture en douceur ---------- */

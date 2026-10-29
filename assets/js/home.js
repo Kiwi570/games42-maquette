@@ -226,7 +226,7 @@ function heroIn() {
   const split = SplitText.create(big, { type: 'chars,words', mask: 'words' });
   padMasks(split);
   tl.eventCallback('onComplete', () => split.revert());
-  tl.from(split.chars, { yPercent: 125, rotate: 6, fontWeight: 280, duration: 1.2, ease: 'expo.out', stagger: 0.03 })
+  tl.from(split.chars, { yPercent: 125, rotate: 6, duration: 1.2, ease: 'expo.out', stagger: 0.03, force3D: true })
     .from('.hero__sub', { y: 20, opacity: 0, duration: 0.8, ease: 'power3.out' }, 0.35)
     .from('.hero .lead', { y: 24, opacity: 0, duration: 0.8, ease: 'power3.out' }, 0.5)
     .from('.hero .actions > *', { y: 24, opacity: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out' }, 0.62)
@@ -272,7 +272,7 @@ function scenes() {
   // Plongée dans le portail en quittant l'ouverture
   if (portal && !calm) {
     gsap.fromTo(portal.state, { dive: 0 }, { dive: 0.6, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 55%', scrub: true } });
-    gsap.to('.hero__text', { yPercent: -18, opacity: 0.2, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.fromTo('.hero__text', { yPercent: 0, opacity: 1 }, { yPercent: -18, opacity: 0.2, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
   }
 
   // Couloir des portails
@@ -434,7 +434,7 @@ function scenes() {
 
 }
 
-intro();
+// L'ouverture ne démarre qu'une fois polices, scènes et premier fond prêts (voir ready dans core.js)
 ready(() => {
   trackScenes();
   scenes();
@@ -442,4 +442,4 @@ ready(() => {
   counters();
   portalReveals(document.querySelector('.anniv-teaser'));
   setTimeout(scrollToHash, 60);
-});
+}, intro);
