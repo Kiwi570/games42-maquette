@@ -1,18 +1,24 @@
 /* Socle commun aux trois pages : défilement fluide, portail, médias, en-tête,
    mode calme, chrono 60:00, clés cachées, curseur, horaires, transitions. */
-import { SITE, HOURS } from './data.js?v=20261028-2';
-import { IMAGES } from './images.js?v=20261028-2';
-import { art, KEY_SVG } from './art.js?v=20261028-2';
-import { createPortal } from './portal.js?v=20261028-2';
+import { SITE, HOURS } from './data.js';
+import { IMAGES } from './images.js';
+import { art, KEY_SVG } from './art.js';
+import { createPortal } from './portal.js';
 import { Lenis } from './vendor/lenis/index.js';
 
 export const gsap = window.gsap;
 export const ScrollTrigger = window.ScrollTrigger;
 export const SplitText = window.SplitText;
 gsap.registerPlugin(ScrollTrigger, SplitText);
+/* Mobile : la barre d'adresse qui apparaît ou disparaît ne doit pas recalculer les scènes */
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 const root = document.documentElement;
 root.classList.add('js');
+/* Arrivée depuis une autre page par le voile (posé par le script d'amorce) */
+export const viaVeil = root.classList.contains('veil-in');
+/* Délai d'entrée du héro : il démarre pendant que le voile s'ouvre, pas dessous */
+export const heroDelay = viaVeil ? 0.4 : 0.15;
 
 /* ---------- Mode calme ---------- */
 /* Le stockage peut être bloqué (navigation privée, cadre) : on le résout dans le try. */
@@ -28,6 +34,17 @@ export const calm = params.get('calme') === '1' || saved === '1' || (saved === n
 if (calm) root.classList.add('calme');
 export const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 export const isNarrow = () => window.innerWidth < 900;
+
+/* ---------- Adresses propres sur l'hébergement final ---------- */
+/* Vercel sert /anniversaire et redirige /anniversaire.html : on évite ce détour à chaque clic. */
+const cleanHost = /\.vercel\.app$|games42\.fr$/.test(location.hostname);
+const cleanHref = (a) => {
+  const h = a.getAttribute('href');
+  if (cleanHost && h && /^(index|machine-a-remonter-le-temps|anniversaire)\.html(#|$)/.test(h)) a.setAttribute('href', h.replace(/^index\.html/, '/').replace(/\.html/, ''));
+};
+document.querySelectorAll('a[href]').forEach(cleanHref);
+/* Liens créés plus tard (couloir, résultats) : nettoyés au moment du clic, avant la navigation */
+document.addEventListener('click', (e) => { const a = e.target.closest?.('a[href]'); if (a) cleanHref(a); }, true);
 
 /* ---------- Médias : vraie image ou visuel provisoire ---------- */
 export function renderMedia(scope = document) {
@@ -82,6 +99,7 @@ const find = (sel) => { try { return document.querySelector(sel); } catch { retu
 export function scrollToTarget(target, { instant = false } = {}) {
   const el = typeof target === 'string' ? find(target) : target;
   if (!el) return;
+  lenis?.resize(); // la hauteur a pu changer (scènes épinglées) : sinon la cible serait tronquée
   const y = anchorResolver?.(el);
   if (y != null) {
     if (lenis) lenis.scrollTo(y, { duration: instant ? 0 : 1.4, immediate: instant, force: true });
@@ -95,7 +113,8 @@ export function scrollToTarget(target, { instant = false } = {}) {
 export function scrollToHash() {
   if (location.hash.length < 2) return;
   const el = find(decodeURIComponent(location.hash));
-  if (el) requestAnimationFrame(() => scrollToTarget(el, { instant: true }));
+  if (!el) return;
+  requestAnimationFrame(() => { scrollToTarget(el, { instant: true }); ScrollTrigger.update(); sceneChanged(); });
 }
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a[href^="#"]');
@@ -111,6 +130,10 @@ document.addEventListener('click', (e) => {
 /* ---------- Portail ---------- */
 const portalEl = document.getElementById('portal');
 export const portal = portalEl ? createPortal(portalEl, { calm }) : null;
+if (params.has('debug')) window.__g42portal = portal; // sondes de test uniquement
+/* Le monde de la première section se charge tout de suite, sans attendre les polices */
+const firstScene = document.querySelector('main [data-scene]');
+if (portal && firstScene) portal.setScene(firstScene.dataset.scene, true);
 /* Le fond WebGL se met en pause quand une section claire couvre tout l'écran. */
 function pauseUnderLightSections() {
   if (!portal) return;
@@ -124,26 +147,43 @@ function pauseUnderLightSections() {
 }
 /* Change de monde et d'ambiance. En mode calme, pas d'animation : l'image est redessinée
    une fois, directement avec le bon assombrissement (sinon le texte peut manquer de contraste). */
+let lookLocked = false;
+/* Pendant l'ouverture orchestrée, l'intro pilote seule l'ambiance du portail. */
+export function lockLook(v) { lookLocked = v; }
 export function sceneLook(scene, look) {
   if (!portal) return;
   if (calm) { Object.assign(portal.state, look); portal.setScene(scene); portal.render(); return; }
   portal.setScene(scene);
-  gsap.to(portal.state, { ...look, duration: 1.2, ease: 'power2.out', overwrite: 'auto' });
+  if (!lookLocked) gsap.to(portal.state, { ...look, duration: 1.2, ease: 'power2.out', overwrite: 'auto' });
+}
+/* Choix de la scène par position, pas par ordre d'événements : lors d'un saut (lien d'ancre,
+   menu), plusieurs déclencheurs basculent dans la même image ; on applique ensuite une seule fois
+   la scène réellement à l'écran. */
+const sceneEntries = [];
+let sceneRaf = 0;
+let currentEntry = null;
+/* when : condition supplémentaire (ex. un monde du couloir ne compte que pendant que le couloir est épinglé) */
+export function registerScene(st, apply, when = null) { sceneEntries.push({ st, apply, when }); }
+export function sceneChanged() {
+  if (sceneRaf) return;
+  sceneRaf = requestAnimationFrame(() => {
+    sceneRaf = 0;
+    const e = sceneEntries.find((x) => x.st.isActive && x.st.enabled !== false && (!x.when || x.when()));
+    if (e && e !== currentEntry) { currentEntry = e; e.apply(); }
+  });
 }
 export function trackScenes() {
   pauseUnderLightSections();
   document.querySelectorAll('[data-scene]:not(.porte-monde)').forEach((sec) => {
-    ScrollTrigger.create({
-      trigger: sec,
-      start: 'top 55%',
-      end: 'bottom 55%',
-      onToggle(self) {
-        if (!self.isActive) return;
-        const d = sec.dataset;
-        sceneLook(d.scene, { dim: parseFloat(d.dim ?? 1), ring: parseFloat(d.ring ?? 1), swirl: parseFloat(d.swirl ?? 1), dive: 0 });
-        const w = sec.dataset.world || sec.closest('[data-world]')?.dataset.world;
-        if (w) root.dataset.world = w; else delete root.dataset.world;
-      },
+    const st = ScrollTrigger.create({ trigger: sec, start: 'top 55%', end: 'bottom 55%', onToggle: sceneChanged });
+    registerScene(st, () => {
+      const d = sec.dataset;
+      const look = { dim: parseFloat(d.dim ?? 1), ring: parseFloat(d.ring ?? 1), swirl: parseFloat(d.swirl ?? 1) };
+      /* La plongée de l'ouverture est pilotée par le défilement (data-dive="scrub") : on n'y touche pas. */
+      if (d.dive !== 'scrub') look.dive = parseFloat(d.dive ?? 0);
+      sceneLook(d.scene, look);
+      const w = d.world; // pas de closest() : il remonterait jusqu'à <html>, qui porte le monde courant
+      if (w) root.dataset.world = w; else delete root.dataset.world;
     });
   });
 }
@@ -156,11 +196,17 @@ const menu = document.getElementById('menu');
 const behindMenu = () => document.querySelectorAll('main, .footer, .actionbar, .notice');
 function setMenu(open, { returnFocus = false } = {}) {
   if (!menu) return;
+  if (open) {
+    const b = burger.getBoundingClientRect();
+    const hb = header ? header.getBoundingClientRect().bottom : 72;
+    menu.style.setProperty('--mx', `${Math.round(b.left + b.width / 2)}px`);
+    menu.style.setProperty('--my', `${Math.round(b.top + b.height / 2)}px`);
+    menu.style.setProperty('--mt', `${Math.round(Math.max(hb, 0) + 24)}px`);
+  }
   menu.classList.toggle('is-open', open);
   burger.setAttribute('aria-expanded', String(open));
   menu.setAttribute('aria-hidden', String(!open));
   behindMenu().forEach((el) => { el.inert = open; });
-  syncActionbar();
   if (open) { lenis?.stop(); menu.querySelector('a')?.focus(); } else { lenis?.start(); if (returnFocus) burger.focus(); }
 }
 function closeMenu(opts) {
@@ -208,7 +254,11 @@ if (noticeEl && HOURS.notice) {
   if ((!HOURS.notice.from || now.iso >= HOURS.notice.from) && now.iso <= HOURS.notice.until && store.get('g42-notice', 'session') !== '1') {
     noticeEl.querySelector('[data-notice-text]').textContent = HOURS.notice.text;
     noticeEl.hidden = false;
-    noticeEl.querySelector('button')?.addEventListener('click', () => { noticeEl.hidden = true; store.set('g42-notice', '1', 'session'); });
+    noticeEl.querySelector('button')?.addEventListener('click', () => {
+      store.set('g42-notice', '1', 'session');
+      if (calm) { noticeEl.hidden = true; return; }
+      gsap.to(noticeEl, { height: 0, paddingTop: 0, paddingBottom: 0, opacity: 0, duration: 0.45, ease: 'power2.inOut', onComplete: () => { noticeEl.hidden = true; gsap.set(noticeEl, { clearProps: 'all' }); } });
+    });
   }
 }
 
@@ -276,24 +326,19 @@ if (chronoEls.length) {
     },
   });
 }
-/* La barre d'actions mobile n'apparaît qu'une fois l'ouverture dépassée, et s'efface
-   sur les formulaires, le pied de page et quand le menu est ouvert : elle ne recouvre rien.
-   Sa hauteur réelle (--barres-h) réserve la place sous le dernier bloc. */
+/* La barre d'actions mobile s'efface tant que le bouton Réserver de l'ouverture est à l'écran,
+   et prend le relais dès qu'il ne l'est plus (au-dessus ou en dessous). */
 const actionbar = document.querySelector('.actionbar');
-const barInView = new Set();
-function syncActionbar() {
-  actionbar?.classList.toggle('is-on', barInView.size === 0 && !menu?.classList.contains('is-open'));
-}
+const heroCta = document.querySelector('main > section .btn--book');
 if (actionbar) {
-  const setBarH = () => root.style.setProperty('--barres-h', `${actionbar.offsetHeight}px`);
-  setBarH();
-  new ResizeObserver(setBarH).observe(actionbar);
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => { if (e.isIntersecting) barInView.add(e.target); else barInView.delete(e.target); });
-    syncActionbar();
-  });
-  [document.querySelector('main > section'), ...document.querySelectorAll('main form, .footer')]
-    .filter(Boolean).forEach((el) => { barInView.add(el); io.observe(el); });
+  if (heroCta) {
+    const st = ScrollTrigger.create({
+      trigger: heroCta, start: 'top bottom', end: 'bottom top',
+      onToggle(self) { actionbar.classList.toggle('is-on', !self.isActive); },
+      onRefresh(self) { actionbar.classList.toggle('is-on', !self.isActive); },
+    });
+    actionbar.classList.toggle('is-on', !st.isActive);
+  } else actionbar.classList.add('is-on');
 }
 
 /* ---------- Clés cachées ---------- */
@@ -357,7 +402,13 @@ if (fine && !calm) {
     if (!shown) { shown = true; gsap.set([cursor, lantern], { x: e.clientX, y: e.clientY }); gsap.to([cursor, lantern], { opacity: 1, duration: 0.4 }); }
     cx(e.clientX); cy(e.clientY); lx(e.clientX); ly(e.clientY);
   }, { passive: true });
-  document.addEventListener('pointerover', (e) => { cursor.classList.toggle('is-hover', !!e.target.closest('a, button, summary, label, [role="spinbutton"]')); });
+  document.addEventListener('pointerover', (e) => {
+    const t = e.target;
+    const drag = !!t.closest?.('[role="spinbutton"]');
+    cursor.classList.toggle('is-drag', drag);
+    cursor.classList.toggle('is-hover', !drag && !!t.closest?.('a, button, summary, label, [role="tab"]'));
+    lantern.classList.toggle('is-dim', !!t.closest?.('.sec--lune, .footer, .menu'));
+  });
   document.documentElement.addEventListener('pointerleave', () => { shown = false; gsap.to([cursor, lantern], { opacity: 0, duration: 0.3 }); });
   document.querySelectorAll('[data-magnetic]').forEach((el) => {
     const mx = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'elastic.out(1, 0.4)' });
@@ -368,20 +419,25 @@ if (fine && !calm) {
 }
 
 /* ---------- Titres vivants : mots qui montent, graisse qui s'affirme ---------- */
+/* Les masques de ligne coupent les jambages (j, p, q) : on leur donne de la marge en bas. */
+export function padMasks(split) {
+  (split.masks || []).forEach((m) => { m.style.paddingBottom = '0.18em'; m.style.marginBottom = '-0.18em'; });
+}
 export function liveTitles(scope = document) {
-  if (calm) return;
+  if (calm) { root.classList.add('titles-ready'); return; }
   scope.querySelectorAll('[data-split]').forEach((el) => {
-    SplitText.create(el, {
-      type: 'lines,words', mask: 'lines', autoSplit: true,
-      onSplit(self) {
-        return gsap.from(self.words, {
-          yPercent: 110, fontWeight: 300, duration: 1.1, ease: 'expo.out', stagger: 0.06,
-          scrollTrigger: { trigger: el, start: 'top 85%', once: true },
-        });
-      },
+    const split = SplitText.create(el, { type: 'lines,words', mask: 'lines' });
+    padMasks(split);
+    gsap.from(split.words, {
+      yPercent: 125, fontWeight: 300, duration: 1.1, ease: 'expo.out', stagger: 0.06,
+      scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+      onComplete: () => split.revert(), // retour au texte d'origine : plus de découpe, plus de masque
     });
   });
+  root.classList.add('titles-ready');
 }
+/* L'ouverture de page est prête : on lève le masque posé dès le premier affichage. */
+export function heroReady() { root.classList.add('hero-ready'); }
 
 /* ---------- Compteurs ---------- */
 export function counters(scope = document) {
@@ -416,9 +472,14 @@ export function portalReveals(scope = document) {
 /* ---------- Transition entre pages : un portail qui s'ouvre ---------- */
 const veil = document.querySelector('.veil');
 if (veil && !calm) {
-  if (store.get('g42-veil', 'session') === '1') {
+  if (root.classList.contains('veil-in') || store.get('g42-veil', 'session') === '1') {
     store.set('g42-veil', '0', 'session');
-    gsap.fromTo(veil, { clipPath: 'circle(150% at 50% 50%)' }, { clipPath: 'circle(0% at 50% 50%)', duration: 0.9, ease: 'expo.inOut', delay: 0.05 });
+    const c = store.get('g42-veil-c', 'session');
+    if (c) veil.style.background = c;
+    // Le vrai voile prend le relais du cache posé par le script d'amorce, dans la même image
+    gsap.set(veil, { clipPath: 'circle(150% at 50% 50%)' });
+    root.classList.remove('veil-in');
+    gsap.to(veil, { clipPath: 'circle(0% at 50% 50%)', duration: 0.9, ease: 'expo.inOut', delay: 0.08, onComplete: () => { veil.style.background = ''; } });
   }
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[href]');
@@ -429,10 +490,11 @@ if (veil && !calm) {
     veil.style.setProperty('--vx', `${e.clientX}px`);
     veil.style.setProperty('--vy', `${e.clientY}px`);
     store.set('g42-veil', '1', 'session');
+    store.set('g42-veil-c', getComputedStyle(veil).backgroundColor, 'session');
     gsap.fromTo(veil, { clipPath: `circle(0% at ${e.clientX}px ${e.clientY}px)` }, { clipPath: `circle(150% at ${e.clientX}px ${e.clientY}px)`, duration: 0.7, ease: 'expo.in', onComplete: () => { location.href = url.href; } });
   });
-  window.addEventListener('pageshow', (e) => { if (e.persisted) gsap.set(veil, { clipPath: 'circle(0% at 50% 50%)' }); });
-}
+  window.addEventListener('pageshow', (e) => { if (e.persisted) { root.classList.remove('veil-in'); gsap.set(veil, { clipPath: 'circle(0% at 50% 50%)' }); } });
+} else root.classList.remove('veil-in');
 
 /* ---------- Divers ---------- */
 document.querySelectorAll('[data-year]').forEach((el) => { el.textContent = String(new Date().getFullYear()); });
@@ -458,7 +520,42 @@ export function frenchSpaces(scope = document.body) {
 }
 frenchSpaces();
 
+/* Quand la hauteur de la page change (résultats du cadenas, FAQ, onglets, bandeau fermé),
+   les positions des scènes épinglées doivent être recalculées, sinon elles se déclenchent trop tôt. */
+let lastH = 0;
+let rto = null;
+function watchHeight() {
+  const main = document.querySelector('main');
+  if (!main || !('ResizeObserver' in window)) return;
+  lastH = document.documentElement.scrollHeight;
+  new ResizeObserver(() => {
+    if (Math.abs(document.documentElement.scrollHeight - lastH) < 2) return;
+    clearTimeout(rto);
+    rto = setTimeout(() => { ScrollTrigger.refresh(); lastH = document.documentElement.scrollHeight; }, 160);
+  }).observe(main);
+}
 export function ready(fn) {
-  const go = () => { fn(); ScrollTrigger.refresh(); };
+  // Les scènes épinglées passent en premier : les positions des sections suivantes en tiennent compte
+  const go = () => { fn(); ScrollTrigger.sort(); ScrollTrigger.refresh(); watchHeight(); sceneChanged(); };
   if (document.fonts?.ready) document.fonts.ready.then(go); else go();
 }
+
+/* ---------- FAQ : ouverture et fermeture en douceur ---------- */
+document.querySelectorAll('.faq details').forEach((d) => {
+  const sum = d.querySelector('summary');
+  const ans = d.querySelector('.answer');
+  if (!sum || !ans) return;
+  sum.addEventListener('click', (e) => {
+    if (calm) return;
+    e.preventDefault();
+    gsap.killTweensOf(ans);
+    if (d.open && !d.classList.contains('is-closing')) {
+      d.classList.add('is-closing');
+      gsap.to(ans, { height: 0, paddingBottom: 0, opacity: 0, duration: 0.35, ease: 'power2.inOut', onComplete: () => { d.open = false; d.classList.remove('is-closing'); gsap.set(ans, { clearProps: 'height,paddingBottom,opacity' }); } });
+    } else {
+      d.classList.remove('is-closing');
+      d.open = true;
+      gsap.fromTo(ans, { height: 0, paddingBottom: 0, opacity: 0 }, { height: 'auto', paddingBottom: '1.2rem', opacity: 1, duration: 0.45, ease: 'power3.out', onComplete: () => gsap.set(ans, { clearProps: 'height,paddingBottom,opacity' }) });
+    }
+  });
+});

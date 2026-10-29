@@ -7,7 +7,7 @@ import { Program } from './vendor/ogl/core/Program.js';
 import { Mesh } from './vendor/ogl/core/Mesh.js';
 import { Texture } from './vendor/ogl/core/Texture.js';
 import { Triangle } from './vendor/ogl/extras/Triangle.js';
-import { WORLDS } from './data.js?v=20261028-2';
+import { WORLDS } from './data.js';
 
 /* Scènes : image de fond + position du portail dans l'image (x depuis la gauche, y depuis le haut)
    et rayon du portail en fraction de la hauteur de l'image. */
@@ -116,8 +116,6 @@ export function createPortal(container, { calm = false } = {}) {
   const state = { cx: 0.66, cy: 0.52, r: 0.3, ring: 1, swirl: 1, dim: 1, dive: 0, mix: 0 };
   const api = { state, ok: false, hidden: false, setScene: () => {}, render: () => {} };
   const portrait = () => window.innerWidth / window.innerHeight < 0.85;
-  let current = null;
-  let pending = null;
 
   let gl, renderer, program, mesh;
   /* Test discret avant de créer le rendu : évite une erreur en console sans WebGL */
@@ -169,8 +167,10 @@ export function createPortal(container, { calm = false } = {}) {
   const u = program.uniforms;
 
   let anchor = { x: 0.66, y: 0.48, r: 0.3, w: 1, h: 1 };
+  /* Taille du fond : celle du conteneur (100lvh), stable quand la barre d'adresse mobile bouge */
+  const size = () => [container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight];
   const place = () => {
-    const sw = window.innerWidth, sh = window.innerHeight;
+    const [sw, sh] = size();
     const sr = sw / sh, ir = anchor.w / anchor.h;
     const s = sr > ir ? [1, ir / sr] : [sr / ir, 1];
     state.cx = (anchor.x - 0.5) / s[0] + 0.5;
@@ -178,10 +178,16 @@ export function createPortal(container, { calm = false } = {}) {
     state.r = anchor.r / s[1];
   };
 
+  let lastW = 0, lastH = 0;
+  const coarse = matchMedia('(pointer: coarse)').matches;
   const resize = () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    const [w, h] = size();
+    // Sur mobile, seule une vraie rotation ou un vrai changement de taille redimensionne le rendu
+    if (coarse && w === lastW && Math.abs(h - lastH) < 160) return;
+    lastW = w; lastH = h;
+    renderer.setSize(w, h);
     u.uRes.value = [gl.canvas.width, gl.canvas.height];
-    if (current) setScene(current, true);
+    if (wanted) show(wanted);
     if (calm) draw(0);
   };
 
@@ -191,35 +197,60 @@ export function createPortal(container, { calm = false } = {}) {
     u.uB.value = hex(wd.b);
   };
 
+  /* Changement de monde : dissolution lumineuse de 1,5 s.
+     Si une nouvelle scène est demandée pendant une dissolution, celle-ci s'achève en accéléré
+     puis enchaîne : plus de saut brutal d'image quand on défile vite. */
   let transitionTween = null;
-  async function setScene(name, instant = false) {
+  let shown = null;
+  let wanted = null;
+  let loading = false;
+  const texFor = async (name) => {
     const sc = SCENES[name] || SCENES.hero;
     const [key, x, y, r] = portrait() ? sc.port : sc.land;
-    const same = current === name;
-    current = name;
-    pending = name;
     const tex = await load(key);
-    if (pending !== name) return;
+    return { sc, tex, x, y, r };
+  };
+  async function show(name) {
+    const { sc, tex, x, y, r } = await texFor(name);
+    if (wanted !== name) return;
+    if (transitionTween) { transitionTween.kill(); transitionTween = null; }
+    u.uT0.value = tex.t; u.uS0.value = [tex.w, tex.h]; state.mix = 0; u.uMix.value = 0;
+    colorTo(sc.world);
     anchor = { x, y, r, w: tex.w, h: tex.h };
-    if (same || instant || calm || !window.gsap) {
-      u.uT0.value = tex.t; u.uS0.value = [tex.w, tex.h]; u.uMix.value = 0; state.mix = 0;
-      colorTo(sc.world);
-      if (!same) place();
-      if (calm) draw(0);
-      return;
-    }
-    if (transitionTween) transitionTween.progress(1);
+    place();
+    shown = name;
+    draw(0);
+    // Première image prête : le fond apparaît en fondu au lieu de surgir
+    if (!container.classList.contains('is-ready')) requestAnimationFrame(() => container.classList.add('is-ready'));
+  }
+  async function dissolve(name) {
+    loading = true;
+    const { sc, tex, x, y, r } = await texFor(name);
+    loading = false;
+    if (wanted !== name) { if (wanted && wanted !== shown) dissolve(wanted); return; }
     u.uT1.value = tex.t; u.uS1.value = [tex.w, tex.h];
     colorTo(sc.world);
     const prev = { cx: state.cx, cy: state.cy, r: state.r };
+    anchor = { x, y, r, w: tex.w, h: tex.h };
     place();
     const next = { cx: state.cx, cy: state.cy, r: state.r };
     Object.assign(state, prev);
     transitionTween = window.gsap.timeline({
-      onComplete() { u.uT0.value = tex.t; u.uS0.value = [tex.w, tex.h]; state.mix = 0; transitionTween = null; },
+      onComplete() {
+        u.uT0.value = tex.t; u.uS0.value = [tex.w, tex.h]; state.mix = 0;
+        shown = name; transitionTween = null;
+        if (wanted && wanted !== shown) dissolve(wanted);
+      },
     })
       .to(state, { mix: 1, duration: 1.5, ease: 'power2.inOut' }, 0)
       .to(state, { ...next, duration: 1.5, ease: 'power3.inOut' }, 0);
+  }
+  function setScene(name, instant = false) {
+    wanted = name;
+    if (instant || calm || !window.gsap || shown === null) return show(name);
+    if (transitionTween) { transitionTween.timeScale(3.5); return; }
+    if (loading || name === shown) return;
+    dissolve(name);
   }
 
   const mouse = { x: 0, y: 0, tx: 0, ty: 0 };

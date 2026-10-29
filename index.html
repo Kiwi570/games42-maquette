@@ -22,7 +22,20 @@
   <link rel="preload" href="assets/fonts/fraunces-var.woff" as="font" type="font/woff" crossorigin>
   <link rel="preload" href="assets/fonts/figtree-var.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="assets/css/lenis.css">
-  <link rel="stylesheet" href="assets/css/main.css?v=20261028-2">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <script>
+    /* Avant le premier affichage : classes d'état pour éviter tout flash (intro, titres, voile entre pages). */
+    (function (h) {
+      var c = ['js'], ls = null, ss = function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+      try { ls = localStorage.getItem('g42-calme'); } catch (e) {}
+      var calm = /[?&]calme=1/.test(location.search) || ls === '1' || (ls === null && matchMedia('(prefers-reduced-motion: reduce)').matches);
+      if (calm) c.push('calme');
+      if (ss('g42-intro') === '1') c.push('intro-seen');
+      if (!calm && ss('g42-veil') === '1') { c.push('veil-in'); h.style.setProperty('--veil-c', ss('g42-veil-c') || '#8E5CFF'); }
+      h.className += (h.className ? ' ' : '') + c.join(' ');
+      setTimeout(function () { h.classList.add('hero-ready', 'titles-ready'); h.classList.remove('veil-in'); }, 4000);
+    })(document.documentElement);
+  </script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -86,19 +99,10 @@
 </svg>
 
 <div id="portal" aria-hidden="true"></div>
-<div class="notice" data-notice data-from="2026-10-17" data-until="2026-11-01" hidden>
-  <p data-notice-text style="margin:0">Vacances de la Toussaint : nous sommes ouverts du mercredi au dimanche.</p>
+<div class="notice" data-notice hidden>
+  <p data-notice-text style="margin:0"></p>
   <button type="button" aria-label="Fermer le bandeau">×</button>
 </div>
-<script>
-  /* Bandeau affiché avant le premier rendu (sinon il pousse la page à son arrivée) : dates de HOURS.notice dans data.js */
-  (function () {
-    var n = document.currentScript.previousElementSibling;
-    try { if (sessionStorage.getItem('g42-notice') === '1') return; } catch (e) { /* stockage indisponible */ }
-    var d = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
-    if (d >= n.dataset.from && d <= n.dataset.until) n.hidden = false;
-  })();
-</script>
 <header class="header">
   <a class="brand" href="index.html" aria-label="Games 42, retour à l’accueil">
     <img class="brand__mark" src="assets/img/logo-mark.webp" alt="" width="42" height="42">
@@ -140,7 +144,7 @@
 <main id="contenu">
 
   <!-- Ouverture -->
-  <section class="hero" id="haut" data-scene="hero" aria-labelledby="hero-title">
+  <section class="hero" id="haut" data-scene="hero" data-dive="scrub" aria-labelledby="hero-title">
     <div class="wrap hero__grid">
       <div class="hero__text">
         <h1 id="hero-title">
@@ -165,7 +169,7 @@
   </section>
 
   <!-- Le cadenas : trouver sa mission -->
-  <section class="sec" id="trouver" data-scene="hero" data-dim="0.32" data-ring="0.25" data-swirl="0.5" aria-labelledby="trouver-title">
+  <section class="sec" id="trouver" data-scene="hero" data-dim="0.32" data-ring="0.25" data-swirl="0.5" data-dive="0.6" aria-labelledby="trouver-title">
     <div class="wrap cadenas">
       <div class="cadenas__intro">
         <h2 id="trouver-title" data-split>Avec qui jouez-vous ?</h2>
@@ -668,6 +672,6 @@
 <script src="assets/js/vendor/gsap.min.js" defer></script>
 <script src="assets/js/vendor/ScrollTrigger.min.js" defer></script>
 <script src="assets/js/vendor/SplitText.min.js" defer></script>
-<script type="module" src="assets/js/home.js?v=20261028-2"></script>
+<script type="module" src="assets/js/home.js"></script>
 </body>
 </html>

@@ -29,3 +29,11 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 - Nouveau coffre illustré (couvercle, intérieur, lumière, étincelles) et porte en photo avec lumière progressive.
 - Statut « ouvert maintenant » : pendant les vacances (dates dans `data.js`, `HOURS.notice`), aucune heure n'est annoncée tant que les horaires de vacances ne sont pas fournis.
 - Référencement : la maquette est en `noindex` (à retirer à la mise en ligne définitive). Images de partage `assets/img/og-*.jpg`, données structurées dans `index.html`.
+
+## Version 3 (effets et transitions)
+
+- Script d'amorce dans chaque page (`<head>`) : aucune image parasite avant l'intro, le titre ou à l'arrivée d'une page.
+- Transition entre pages : le voile garde la couleur du monde de départ et couvre la page d'arrivée dès le premier affichage.
+- Fond animé : choix du monde par position (plus d'erreur après un saut d'ancre), scènes épinglées calculées en premier, dissolutions enchaînées sans saut, plongée de l'ouverture sans à-coup, taille stable sur mobile.
+- Positions recalculées automatiquement quand la page change de hauteur (cadenas ouvert, FAQ, bandeau fermé).
+- Titres animés sans jambages coupés, menu mobile qui s'ouvre depuis son bouton, FAQ et bandeau animés, navigation au clavier dans le couloir.

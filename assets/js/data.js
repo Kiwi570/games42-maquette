@@ -41,7 +41,6 @@ export const HOURS = {
     { d: 0, label: 'Dimanche', open: '10:00', close: '21:15' },
   ],
   /* Bandeau saisonnier : texte du site actuel, affiché pendant les vacances (dates à vérifier).
-     Texte et dates sont repris dans le bandeau en ligne des pages HTML (data-from, data-until) : les modifier aux deux endroits.
      Pendant cette période, le statut « ouvert maintenant » n'annonce pas d'heure précise :
      les horaires de vacances restent à compléter. */
   notice: {

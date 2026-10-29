@@ -1,7 +1,7 @@
 /* Page d'accueil : ouverture, cadenas à molettes, couloir des portails,
    coffre, porte, frise, carte, bon cadeau. */
-import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook } from './core.js?v=20261028-2';
-import { MISSIONS, PRICES, SITE } from './data.js?v=20261028-2';
+import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook, lockLook, padMasks, heroReady, viaVeil, registerScene, sceneChanged } from './core.js';
+import { MISSIONS, PRICES, SITE } from './data.js';
 
 const SCENE_OF = { sorcier: 'sorcier', temps: 'temps', pirate: 'pirate', cirque: 'cirque', serpent: 'serpent' };
 const euro = (v) => `${Number.isInteger(v) ? v : v.toFixed(2).replace('.', ',')} €`;
@@ -107,6 +107,7 @@ function makeWheel(root, items, start, onChange) {
 const lockEl = document.querySelector('[data-lock]');
 const resultsEl = document.getElementById('results');
 let opened = false;
+let rendered = false;
 const wTeam = makeWheel(lockEl.querySelector('[data-wheel="team"]'), TEAMS, 2, (v) => {
   const age = wAge.value;
   if (v === 'adultes' && age < 18) wAge.set(wAge.indexOf(18));
@@ -185,7 +186,10 @@ function render() {
     : `<p class="results__empty">Aucune de nos missions ne correspond exactement à ce réglage. Appelez-nous au <a href="${SITE.phoneHref}">${SITE.phone}</a> : nous adaptons souvent les formules.</p>`}`;
   renderMedia(resultsEl);
   frenchSpaces(resultsEl);
-  if (!calm) gsap.from(resultsEl.querySelectorAll('.result, .results__empty'), { y: 40, opacity: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out' });
+  if (calm) return;
+  if (!rendered) gsap.from(resultsEl.querySelectorAll('.result, .results__empty'), { y: 40, opacity: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out' });
+  else gsap.fromTo(resultsEl.querySelectorAll('.result, .results__empty'), { opacity: 0.4 }, { opacity: 1, duration: 0.35, stagger: 0.03, ease: 'power1.out' });
+  rendered = true;
 }
 
 function openLock() {
@@ -218,29 +222,36 @@ document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('cl
 function heroIn() {
   const big = document.querySelector('.hero__big');
   const tl = gsap.timeline();
-  if (calm) return tl;
+  if (calm) { heroReady(); return tl; }
   const split = SplitText.create(big, { type: 'chars,words', mask: 'words' });
-  tl.from(split.chars, { yPercent: 115, rotate: 6, fontWeight: 280, duration: 1.2, ease: 'expo.out', stagger: 0.03 })
+  padMasks(split);
+  tl.eventCallback('onComplete', () => split.revert());
+  tl.from(split.chars, { yPercent: 125, rotate: 6, fontWeight: 280, duration: 1.2, ease: 'expo.out', stagger: 0.03 })
     .from('.hero__sub', { y: 20, opacity: 0, duration: 0.8, ease: 'power3.out' }, 0.35)
     .from('.hero .lead', { y: 24, opacity: 0, duration: 0.8, ease: 'power3.out' }, 0.5)
     .from('.hero .actions > *', { y: 24, opacity: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out' }, 0.62)
     .from('.hero .proofs li', { y: 16, opacity: 0, duration: 0.6, stagger: 0.06, ease: 'power3.out' }, 0.75)
     .from('.scroll-cue', { opacity: 0, duration: 0.6 }, 1.1);
+  heroReady(); // les éléments sont déjà à leur état de départ : on peut lever le masque sans flash
   return tl;
 }
 
 function intro() {
   const el = document.querySelector('.intro');
-  if (calm || !el) { el?.remove(); return; }
+  const root = document.documentElement;
+  if (calm || !el) { el?.remove(); heroIn(); return; }
   let seen = null;
   try { seen = sessionStorage.getItem('g42-intro'); } catch { /* sans stockage */ }
-  if (seen === '1') {
+  // Déjà vue, ou arrivée depuis une autre page par le voile : pas de deuxième ouverture
+  if (seen === '1' || viaVeil || root.classList.contains('intro-seen')) {
     el.remove();
+    try { sessionStorage.setItem('g42-intro', '1'); } catch { /* sans stockage */ }
     if (portal) Object.assign(portal.state, { dim: 1, ring: 1, swirl: 1 });
-    heroIn();
+    heroIn().delay(viaVeil ? 0.4 : 0);
     return;
   }
   try { sessionStorage.setItem('g42-intro', '1'); } catch { /* sans stockage */ }
+  lockLook(true);
   const svg = el.querySelector('svg');
   const shackle = el.querySelector('.intro__shackle');
   if (portal) Object.assign(portal.state, { dim: 0.15, ring: 0, swirl: 3 });
@@ -248,7 +259,8 @@ function intro() {
   tl.from(svg, { scale: 0.7, opacity: 0, duration: 0.45, ease: 'power3.out' })
     .to(shackle, { y: -16, duration: 0.3, ease: 'back.out(3)' }, 0.5)
     .to(svg, { scale: 7, opacity: 0, duration: 0.75, ease: 'expo.in' }, 0.85)
-    .to(el, { opacity: 0, duration: 0.45, onComplete: () => el.remove() }, 1.2);
+    .to(el, { opacity: 0, duration: 0.45, onComplete: () => el.remove() }, 1.2)
+    .call(() => lockLook(false), null, 2.6);
   if (portal) tl.to(portal.state, { dim: 1, ring: 1, swirl: 1, duration: 1.6, ease: 'power2.out' }, 0.95);
   tl.add(heroIn(), 1.15);
 }
@@ -259,7 +271,7 @@ function scenes() {
 
   // Plongée dans le portail en quittant l'ouverture
   if (portal && !calm) {
-    gsap.to(portal.state, { dive: 0.7, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.fromTo(portal.state, { dive: 0 }, { dive: 0.6, ease: 'none', immediateRender: false, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 55%', scrub: true } });
     gsap.to('.hero__text', { yPercent: -18, opacity: 0.2, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
   }
 
@@ -283,6 +295,8 @@ function scenes() {
         scrollTrigger: {
           trigger: pinEl, pin: true, start: () => (pinEl.offsetHeight > window.innerHeight - 40 ? 'top top+=20' : 'center center'),
           end: () => `+=${dist()}`, scrub: 0.8, invalidateOnRefresh: true, anticipatePin: 1,
+          refreshPriority: 1, // calculé avant les scènes situées plus bas (sinon elles seraient décalées de toute la longueur du couloir)
+          onToggle: sceneChanged,
           onUpdate: (self) => {
             bars.forEach((b, i) => { b.style.width = `${Math.max(0, Math.min(1, self.progress * panels.length - i)) * 100}%`; });
             const cur = Math.round(self.progress * (panels.length - 1));
@@ -314,16 +328,24 @@ function scenes() {
         setTimeout(() => { snapping = false; }, 1200);
       };
       ScrollTrigger.addEventListener('scrollEnd', snap);
-      cleanup = () => { ScrollTrigger.removeEventListener('scrollEnd', snap); offDir?.(); setAnchorResolver(null); };
+      // Navigation au clavier : un bouton atteint par Tab fait venir son monde à l'écran
+      const onFocus = (e) => {
+        const p = e.target.closest('.porte-monde');
+        if (!p) return;
+        const y = yOf(panels.indexOf(p));
+        if (Math.abs(window.scrollY - y) > 4) { if (lenis) lenis.scrollTo(y, { duration: 0.9, force: true }); else window.scrollTo(0, y); }
+      };
+      track.addEventListener('focusin', onFocus);
+      cleanup = () => { ScrollTrigger.removeEventListener('scrollEnd', snap); track.removeEventListener('focusin', onFocus); offDir?.(); setAnchorResolver(null); };
       panels.forEach((p) => {
-        ScrollTrigger.create({ trigger: p, containerAnimation: move, start: 'left 55%', end: 'right 55%', onToggle: (s) => s.isActive && setPanelScene(p) });
+        registerScene(ScrollTrigger.create({ trigger: p, containerAnimation: move, start: 'left 55%', end: 'right 55%', onToggle: sceneChanged }), () => setPanelScene(p), () => move.scrollTrigger.isActive);
         const inner = p.querySelector('.media__inner');
         gsap.fromTo(inner, { clipPath: 'circle(0% at 50% 62%)', scale: 1.3 }, { clipPath: 'circle(75% at 50% 50%)', scale: 1, ease: 'none', scrollTrigger: { trigger: p, containerAnimation: move, start: 'left 95%', end: 'left 40%', scrub: true } });
         gsap.from(p.querySelectorAll('.porte-monde__kind, h3, .facts li'), { x: 80, opacity: 0, stagger: 0.04, ease: 'none', scrollTrigger: { trigger: p, containerAnimation: move, start: 'left 90%', end: 'left 45%', scrub: true } });
       });
     } else {
       panels.forEach((p) => {
-        ScrollTrigger.create({ trigger: p, start: 'top 55%', end: 'bottom 55%', onToggle: (s) => s.isActive && setPanelScene(p) });
+        registerScene(ScrollTrigger.create({ trigger: p, start: 'top 55%', end: 'bottom 55%', onToggle: sceneChanged }), () => setPanelScene(p));
       });
       portalReveals(document.querySelector('.couloir'));
     }

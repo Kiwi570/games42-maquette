@@ -1,8 +1,8 @@
 /* Page « La Machine à remonter le temps » : compte à rebours, horloge à réparer,
    frise des époques, jauges, calculateur de prix. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready, scrollToHash } from './core.js?v=20261028-2';
-import { gearPath } from './art.js?v=20261028-2';
-import { PRICES } from './data.js?v=20261028-2';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, ready, scrollToHash, padMasks, heroReady, heroDelay } from './core.js';
+import { gearPath } from './art.js';
+import { PRICES } from './data.js';
 
 /* ---------- Dessins : engrenages et graduations ---------- */
 document.querySelectorAll('.gear-obj').forEach((p) => p.setAttribute('d', gearPath(42, 42, 24, 10, 0.22)));
@@ -46,14 +46,14 @@ const setFound = (n) => {
 
 /* ---------- Titre ---------- */
 function heroIn() {
-  if (calm) return;
+  if (calm) { heroReady(); return; }
   const split = SplitText.create('.m-title', { type: 'words,chars', mask: 'words' });
-  /* Largeur des mots figée à la graisse finale : le titre ne change pas de nombre de lignes pendant l'animation */
-  split.masks.forEach((m) => { m.style.width = `${m.getBoundingClientRect().width}px`; });
-  gsap.timeline({ delay: 0.15 })
-    .from(split.chars, { yPercent: 115, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.022 })
+  padMasks(split);
+  gsap.timeline({ delay: heroDelay, onComplete: () => split.revert() })
+    .from(split.chars, { yPercent: 125, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.022 })
     .from('.page-hero .badge-new, .page-hero .crumbs', { y: 16, opacity: 0, duration: 0.6, stagger: 0.08 }, 0)
     .from('.page-hero .lead, .countdown, .page-hero .facts li, .page-hero .actions > *', { y: 24, opacity: 0, duration: 0.7, stagger: 0.06, ease: 'power3.out' }, 0.4);
+  heroReady();
 }
 
 function scenes() {
@@ -63,7 +63,7 @@ function scenes() {
     if (wide && !calm) {
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: '.objets__pin', pin: true, start: 'top top', end: '+=1600', scrub: 0.6,
+          trigger: '.objets__pin', pin: true, start: 'top top', end: '+=1600', scrub: 0.6, refreshPriority: 2,
           onUpdate: (self) => setFound(Math.min(3, Math.floor(self.progress * 3.6))),
         },
       });
@@ -76,7 +76,7 @@ function scenes() {
       const dist = () => track.scrollWidth - window.innerWidth + 32;
       const move = gsap.to(track, {
         x: () => -dist(), ease: 'none',
-        scrollTrigger: { trigger: '.epoques__pin', pin: true, start: 'center center', end: () => `+=${dist()}`, scrub: 0.8, invalidateOnRefresh: true },
+        scrollTrigger: { trigger: '.epoques__pin', pin: true, start: 'center center', end: () => `+=${dist()}`, scrub: 0.8, invalidateOnRefresh: true, refreshPriority: 1 },
       });
       gsap.fromTo('.epoques__hand', { left: '0%' }, { left: '100%', ease: 'none', scrollTrigger: { trigger: '.epoques__pin', start: 'center center', end: () => `+=${dist()}`, scrub: 0.8 } });
       document.querySelectorAll('.epoque .portal-reveal .media__inner').forEach((inner) => {

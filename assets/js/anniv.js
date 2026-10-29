@@ -1,7 +1,7 @@
 /* Page « Anniversaire » : bougies qui s'allument, frise du mercredi,
    calculateur, invitations en enveloppes. */
-import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces, scrollToHash } from './core.js?v=20261028-2';
-import { PRICES, INVITATIONS } from './data.js?v=20261028-2';
+import { gsap, ScrollTrigger, SplitText, calm, trackScenes, liveTitles, portalReveals, ready, frenchSpaces, scrollToHash, padMasks, heroReady, heroDelay } from './core.js';
+import { PRICES, INVITATIONS } from './data.js';
 
 /* ---------- Invitations ---------- */
 const env = document.querySelector('[data-invitations]');
@@ -44,12 +44,14 @@ function lightTimeline(panel, instant = false) {
   const rail = panel.querySelector('.timeline__rail i');
   const dots = panel.querySelectorAll('.timeline__dot');
   if (calm) { dots.forEach((d) => d.classList.add('is-lit')); return; }
+  panel._tl?.kill();
   const tl = gsap.timeline({ paused: !instant });
+  panel._tl = tl;
   tl.fromTo(rail, { scaleY: 0 }, { scaleY: 1, duration: 2.2, ease: 'power1.inOut' }, 0);
   dots.forEach((d, i) => {
     d.classList.remove('is-lit');
     tl.call(() => d.classList.add('is-lit'), null, 0.1 + i * 0.62);
-    tl.from(d.nextElementSibling, { x: 30, opacity: 0, duration: 0.6, ease: 'power3.out' }, 0.05 + i * 0.62);
+    tl.fromTo(d.nextElementSibling, { x: 30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, 0.05 + i * 0.62);
   });
   if (!instant) ScrollTrigger.create({ trigger: panel, start: 'top 75%', once: true, onEnter: () => tl.play() });
   return tl;
@@ -91,16 +93,16 @@ update(false);
 /* ---------- Ouverture : les bougies s'allument une à une ---------- */
 function heroIn() {
   const flames = document.querySelectorAll('.candles-row .candle__flame');
-  if (calm) { gsap.set(flames, { scale: 1 }); return; }
+  if (calm) { gsap.set(flames, { scale: 1 }); heroReady(); return; }
   const split = SplitText.create('.a-title', { type: 'words,chars', mask: 'words' });
-  /* Largeur des mots figée à la graisse finale : le titre ne change pas de nombre de lignes pendant l'animation */
-  split.masks.forEach((m) => { m.style.width = `${m.getBoundingClientRect().width}px`; });
-  const tl = gsap.timeline({ delay: 0.15 });
-  tl.from(split.chars, { yPercent: 115, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.02 })
+  padMasks(split);
+  const tl = gsap.timeline({ delay: heroDelay, onComplete: () => split.revert() });
+  tl.from(split.chars, { yPercent: 125, fontWeight: 280, duration: 1.1, ease: 'expo.out', stagger: 0.02 })
     .from('.page-hero .crumbs, .page-hero .lead, .page-hero .actions > *, .page-hero .proofs li', { y: 24, opacity: 0, duration: 0.7, stagger: 0.06, ease: 'power3.out' }, 0.35)
     .from('.candles-hero .media', { clipPath: 'circle(0% at 50% 80%)', duration: 1.4, ease: 'expo.inOut' }, 0.2)
     .from('.candles-row .candle', { y: 60, opacity: 0, stagger: 0.08, duration: 0.7, ease: 'back.out(2)' }, 0.8);
   flames.forEach((f, i) => tl.to(f, { scale: 1, duration: 0.45, ease: 'back.out(3)' }, 1.3 + i * 0.28));
+  heroReady();
 }
 
 function scenes() {
