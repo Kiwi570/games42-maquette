@@ -99,6 +99,7 @@ const find = (sel) => { try { return document.querySelector(sel); } catch { retu
 export function scrollToTarget(target, { instant = false } = {}) {
   const el = typeof target === 'string' ? find(target) : target;
   if (!el) return;
+  flushRefresh(); // positions à jour avant de viser
   lenis?.resize(); // la hauteur a pu changer (scènes épinglées) : sinon la cible serait tronquée
   const y = anchorResolver?.(el);
   if (y != null) {
@@ -217,13 +218,21 @@ burger?.addEventListener('click', () => setMenu(!menu.classList.contains('is-ope
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu({ returnFocus: true }); });
 menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => closeMenu()));
 if (header) {
-  let lastY = 0;
+  /* L'en-tête se cache en descendant, revient après une vraie remontée (24 px), et reste caché
+     pendant les scènes épinglées (couloir, horloge, époques) pour ne jamais recouvrir leur contenu. */
+  let lastY = 0, up = 0, pins = [];
+  ScrollTrigger.addEventListener('refresh', () => { pins = ScrollTrigger.getAll().filter((st) => st.pin); });
   ScrollTrigger.create({
     start: 0, end: 'max',
     onUpdate(self) {
       const y = self.scroll();
-      header.classList.toggle('is-hidden', y > 500 && y > lastY && !menu?.classList.contains('is-open'));
+      const d = y - lastY;
       lastY = y;
+      if (menu?.classList.contains('is-open')) return;
+      const pinned = pins.some((st) => st.isActive);
+      if (pinned || (y > 500 && d > 0)) { up = 0; header.classList.add('is-hidden'); return; }
+      if (d < 0) up -= d;
+      if (y <= 500 || up > 24) header.classList.remove('is-hidden');
     },
   });
   header.addEventListener('focusin', () => header.classList.remove('is-hidden'));
@@ -407,7 +416,9 @@ if (fine && !calm) {
     const drag = !!t.closest?.('[role="spinbutton"]');
     cursor.classList.toggle('is-drag', drag);
     cursor.classList.toggle('is-hover', !drag && !!t.closest?.('a, button, summary, label, [role="tab"]'));
-    lantern.classList.toggle('is-dim', !!t.closest?.('.sec--lune, .footer, .menu'));
+    const light = !!t.closest?.('.sec--lune');
+    lantern.classList.toggle('is-dim', light || !!t.closest?.('.footer, .menu'));
+    cursor.classList.toggle('on-light', light);
   });
   document.documentElement.addEventListener('pointerleave', () => { shown = false; gsap.to([cursor, lantern], { opacity: 0, duration: 0.3 }); });
   document.querySelectorAll('[data-magnetic]').forEach((el) => {
@@ -429,7 +440,7 @@ export function liveTitles(scope = document) {
     const split = SplitText.create(el, { type: 'lines,words', mask: 'lines' });
     padMasks(split);
     gsap.from(split.words, {
-      yPercent: 125, fontWeight: 300, duration: 1.1, ease: 'expo.out', stagger: 0.06,
+      yPercent: 125, duration: 1.1, ease: 'expo.out', stagger: 0.06,
       scrollTrigger: { trigger: el, start: 'top 85%', once: true },
       onComplete: () => split.revert(), // retour au texte d'origine : plus de découpe, plus de masque
     });
@@ -524,14 +535,31 @@ frenchSpaces();
    les positions des scènes épinglées doivent être recalculées, sinon elles se déclenchent trop tôt. */
 let lastH = 0;
 let rto = null;
+let refreshPending = false;
+/* Avant de calculer une position (ancre, aimantation), on applique un rafraîchissement en attente. */
+export function flushRefresh() {
+  if (!refreshPending) return;
+  clearTimeout(rto);
+  refreshPending = false;
+  ScrollTrigger.refresh();
+  lastH = document.documentElement.scrollHeight;
+}
 function watchHeight() {
   const main = document.querySelector('main');
   if (!main || !('ResizeObserver' in window)) return;
   lastH = document.documentElement.scrollHeight;
+  const run = () => {
+    if (lenis?.isScrolling) { rto = setTimeout(run, 220); return; } // on attend l'arrêt du défilement
+    refreshPending = false;
+    if (Math.abs(document.documentElement.scrollHeight - lastH) < 24) return; // changement passager, déjà résorbé
+    ScrollTrigger.refresh();
+    lastH = document.documentElement.scrollHeight;
+  };
   new ResizeObserver(() => {
-    if (Math.abs(document.documentElement.scrollHeight - lastH) < 2) return;
+    if (Math.abs(document.documentElement.scrollHeight - lastH) < 24) return; // arrondis ignorés
     clearTimeout(rto);
-    rto = setTimeout(() => { ScrollTrigger.refresh(); lastH = document.documentElement.scrollHeight; }, 160);
+    refreshPending = true;
+    rto = setTimeout(run, 160);
   }).observe(main);
 }
 export function ready(fn) {

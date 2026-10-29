@@ -76,9 +76,10 @@ function scenes() {
       const dist = () => track.scrollWidth - window.innerWidth + 32;
       const move = gsap.to(track, {
         x: () => -dist(), ease: 'none',
-        scrollTrigger: { trigger: '.epoques__pin', pin: true, start: 'center center', end: () => `+=${dist()}`, scrub: 0.8, invalidateOnRefresh: true, refreshPriority: 1 },
+        scrollTrigger: { trigger: '.epoques__pin', pin: true, start: 'center center', end: () => `+=${dist()}`, scrub: 0.35, invalidateOnRefresh: true, refreshPriority: 1 },
       });
-      gsap.fromTo('.epoques__hand', { left: '0%' }, { left: '100%', ease: 'none', scrollTrigger: { trigger: '.epoques__pin', start: 'center center', end: () => `+=${dist()}`, scrub: 0.8 } });
+      const ruler = document.querySelector('.epoques__ruler');
+      gsap.fromTo('.epoques__hand', { x: 0, xPercent: -50 }, { x: () => ruler.offsetWidth, xPercent: -50, ease: 'none', scrollTrigger: { trigger: '.epoques__pin', start: 'center center', end: () => `+=${dist()}`, scrub: 0.35, invalidateOnRefresh: true } });
       document.querySelectorAll('.epoque .portal-reveal .media__inner').forEach((inner) => {
         gsap.fromTo(inner, { clipPath: 'circle(0% at 50% 65%)', scale: 1.3 }, { clipPath: 'circle(80% at 50% 50%)', scale: 1, ease: 'none', scrollTrigger: { trigger: inner.closest('.epoque'), containerAnimation: move, start: 'left 100%', end: 'left 55%', scrub: true } });
       });

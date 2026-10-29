@@ -55,10 +55,12 @@ float noise(vec2 p) {
   vec2 i = floor(p); vec2 f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
   return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
 }
-float fbm(vec2 p) {
+/* Bruits allégés : 2 ou 3 octaves suffisent pour un fond flou, deux fois moins de calcul par pixel */
+float fbm2(vec2 p) { return 0.62 * noise(p) + 0.38 * noise(mat2(1.6, 1.2, -1.2, 1.6) * p); }
+float fbm3(vec2 p) {
   float v = 0.0; float a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
-  for (int i = 0; i < 4; i++) { v += a * noise(p); p = m * p; a *= 0.5; }
-  return v;
+  for (int i = 0; i < 3; i++) { v += a * noise(p); p = m * p; a *= 0.5; }
+  return v / 0.875;
 }
 vec2 cover(vec2 uv, vec2 img) {
   float sr = uRes.x / uRes.y; float ir = img.x / img.y;
@@ -80,27 +82,35 @@ void main() {
   float fall = smoothstep(R * 2.2, 0.0, r);
   float ang = uSwirl * fall * (0.35 * sin(uTime * 0.55 + r * 9.0) + 0.25 * sin(uTime * 0.31)) + uDive * fall * 1.2;
   d = rot(ang) * d;
-  vec2 w = vec2(fbm(uv * 3.0 + uTime * 0.05), fbm(uv * 3.0 - uTime * 0.04)) - 0.5;
+  vec2 w = vec2(fbm2(uv * 3.0 + uTime * 0.05), fbm2(uv * 3.0 - uTime * 0.04 + 11.3)) - 0.5;
   vec2 suv = uC + d / asp + w * 0.012 * (0.4 + fall) + uMouse * 0.008;
 
-  vec3 c0 = texture2D(uT0, cover(suv, uS0)).rgb;
-  vec3 c1 = texture2D(uT1, cover(suv, uS1)).rgb;
+  vec3 col = texture2D(uT0, cover(suv, uS0)).rgb;
 
-  // Dissolution lumineuse entre deux mondes
-  float n = fbm(uv * 3.5 + vec2(0.0, uTime * 0.05));
-  float edge = smoothstep(n - 0.08, n + 0.08, uMix * 1.16 - 0.08);
-  vec3 col = mix(c0, c1, edge);
-  float front = exp(-pow((uMix * 1.16 - 0.08 - n) * 14.0, 2.0)) * step(0.001, uMix) * step(uMix, 0.999);
-  col += mix(uA, uB, n) * front * 1.2;
+  // Dissolution lumineuse entre deux mondes (calculée seulement pendant une transition)
+  if (uMix > 0.001 && uMix < 0.999) {
+    vec3 c1 = texture2D(uT1, cover(suv, uS1)).rgb;
+    float n = fbm3(uv * 3.5 + vec2(0.0, uTime * 0.05));
+    float edge = smoothstep(n - 0.08, n + 0.08, uMix * 1.16 - 0.08);
+    col = mix(col, c1, edge);
+    float front = exp(-pow((uMix * 1.16 - 0.08 - n) * 14.0, 2.0));
+    col += mix(uA, uB, n) * front * 1.2;
+  } else if (uMix >= 0.999) {
+    col = texture2D(uT1, cover(suv, uS1)).rgb;
+  }
 
-  // Anneau d'énergie et étincelles
-  float ringN = fbm(vec2(atan(d.y, d.x) * 2.0 + uTime * 0.4, r * 6.0 - uTime * 0.6));
-  float dist = abs(r - R - (ringN - 0.5) * R * 0.18);
-  float ring = exp(-dist * dist / (R * R * 0.004 + 0.00002)) * 0.9 + 0.006 * R / (dist + 0.004);
-  vec3 ringCol = mix(uA, uB, smoothstep(0.3, 0.8, ringN));
-  col += ringCol * ring * uRing;
-  float sparks = pow(noise(d * 55.0 / max(R, 0.1) + vec2(uTime * 1.5, -uTime)), 22.0) * smoothstep(R * 2.4, R * 0.6, r);
-  col += uB * sparks * 2.4 * uRing;
+  // Anneau d'énergie et étincelles (ignorés quand l'anneau est éteint)
+  if (uRing > 0.01) {
+    float ringN = fbm2(vec2(atan(d.y, d.x) * 2.0 + uTime * 0.4, r * 6.0 - uTime * 0.6));
+    float dist = abs(r - R - (ringN - 0.5) * R * 0.18);
+    float ring = exp(-dist * dist / (R * R * 0.004 + 0.00002)) * 0.9 + 0.006 * R / (dist + 0.004);
+    vec3 ringCol = mix(uA, uB, smoothstep(0.3, 0.8, ringN));
+    col += ringCol * ring * uRing;
+    if (r < R * 2.4) {
+      float sparks = pow(noise(d * 55.0 / max(R, 0.1) + vec2(uTime * 1.5, -uTime)), 22.0) * smoothstep(R * 2.4, R * 0.6, r);
+      col += uB * sparks * 2.4 * uRing;
+    }
+  }
 
   // Lisibilité : assombrissement + vignette, teinte du monde dans les ombres
   col *= uDim;
@@ -123,8 +133,11 @@ export function createPortal(container, { calm = false } = {}) {
     try { const c = document.createElement('canvas'); const g = c.getContext('webgl2') || c.getContext('webgl'); g?.getExtension('WEBGL_lose_context')?.loseContext(); return !!g; } catch { return false; }
   })();
   if (!canGL) return fallback(container, api, portrait);
+  /* Résolution du fond : réduite (image floue par nature), puis ajustée en continu selon la fluidité réelle */
+  const baseDpr = Math.min(window.devicePixelRatio || 1, 1.5) * (matchMedia('(pointer: coarse)').matches ? 0.5 : 0.6);
+  let quality = 1;
   try {
-    renderer = new Renderer({ dpr: Math.min(window.devicePixelRatio || 1, 1.5) * (matchMedia('(pointer: coarse)').matches ? 0.5 : 0.62), alpha: false, antialias: false, powerPreference: 'high-performance' });
+    renderer = new Renderer({ dpr: baseDpr, alpha: false, antialias: false, powerPreference: 'default' });
     gl = renderer.gl;
     if (!gl) throw new Error('webgl');
   } catch (e) {
@@ -273,12 +286,29 @@ export function createPortal(container, { calm = false } = {}) {
     u.uMix.value = state.mix;
     renderer.render({ scene: mesh });
   }
+  /* Fluidité : 60 images/s au plus (écrans 120 Hz), et résolution baissée si les images arrivent en retard */
+  let avg = 16.7, frames = 0, good = 0;
+  const setQuality = (q) => {
+    quality = q;
+    renderer.dpr = baseDpr * quality;
+    const [w, h] = size();
+    renderer.setSize(w, h);
+    u.uRes.value = [gl.canvas.width, gl.canvas.height];
+  };
   function loop(now) {
     if (!running) return;
-    const dt = Math.min(0.05, (now - last) / 1000);
-    last = now;
-    if (!api.hidden) draw(dt);
     requestAnimationFrame(loop);
+    const raw = now - last;
+    if (raw < 11.5) return; // écran 120 Hz : une image sur deux suffit au fond (60 Hz : toutes)
+    last = now;
+    if (raw < 100) {
+      avg += (raw - avg) * 0.06;
+      if (++frames % 90 === 0) {
+        if (avg > 21 && quality > 0.5) { setQuality(Math.max(0.5, quality - 0.15)); good = 0; }
+        else if (avg < 17.5 && quality < 1 && ++good >= 4) { setQuality(Math.min(1, quality + 0.1)); good = 0; }
+      }
+    }
+    if (!api.hidden) draw(Math.min(0.05, raw / 1000));
   }
   document.addEventListener('visibilitychange', () => {
     if (calm) return;

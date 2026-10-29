@@ -37,3 +37,10 @@ Bouton « Mode calme » (et préférence système « réduire les animations »)
 - Fond animé : choix du monde par position (plus d'erreur après un saut d'ancre), scènes épinglées calculées en premier, dissolutions enchaînées sans saut, plongée de l'ouverture sans à-coup, taille stable sur mobile.
 - Positions recalculées automatiquement quand la page change de hauteur (cadenas ouvert, FAQ, bandeau fermé).
 - Titres animés sans jambages coupés, menu mobile qui s'ouvre depuis son bouton, FAQ et bandeau animés, navigation au clavier dans le couloir.
+
+## Version 4 (fluidité du défilement)
+
+- Plus aucun flou d'arrière-plan ni mode de fusion au-dessus du fond animé (recalculés à chaque image, cause principale des saccades).
+- Fond WebGL : calcul par pixel divisé par deux, 60 images/s au plus, résolution qui baisse toute seule si l'ordinateur peine.
+- Plus de recalcul des positions en plein défilement ; titres animés sans graisse variable ; barres et aiguilles animées par transformation.
+- Couloir : aimantation douce vers le monde le plus proche, annulée dès que l'on reprend la main ; en-tête masqué pendant les scènes épinglées.

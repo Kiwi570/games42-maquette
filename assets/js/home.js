@@ -1,6 +1,6 @@
 /* Page d'accueil : ouverture, cadenas à molettes, couloir des portails,
    coffre, porte, frise, carte, bon cadeau. */
-import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook, lockLook, padMasks, heroReady, viaVeil, registerScene, sceneChanged } from './core.js';
+import { gsap, ScrollTrigger, SplitText, calm, fine, portal, lenis, renderMedia, trackScenes, liveTitles, counters, portalReveals, ready, scrollToTarget, scrollToHash, setAnchorResolver, frenchSpaces, sceneLook, lockLook, padMasks, heroReady, viaVeil, registerScene, sceneChanged, flushRefresh } from './core.js';
 import { MISSIONS, PRICES, SITE } from './data.js';
 
 const SCENE_OF = { sorcier: 'sorcier', temps: 'temps', pirate: 'pirate', cirque: 'cirque', serpent: 'serpent' };
@@ -294,11 +294,11 @@ function scenes() {
         x: () => -dist(), ease: 'none',
         scrollTrigger: {
           trigger: pinEl, pin: true, start: () => (pinEl.offsetHeight > window.innerHeight - 40 ? 'top top+=20' : 'center center'),
-          end: () => `+=${dist()}`, scrub: 0.8, invalidateOnRefresh: true, anticipatePin: 1,
+          end: () => `+=${dist()}`, scrub: 0.35, invalidateOnRefresh: true, anticipatePin: 1, // Lenis lisse déjà : peu de retard en plus
           refreshPriority: 1, // calculé avant les scènes situées plus bas (sinon elles seraient décalées de toute la longueur du couloir)
           onToggle: sceneChanged,
           onUpdate: (self) => {
-            bars.forEach((b, i) => { b.style.width = `${Math.max(0, Math.min(1, self.progress * panels.length - i)) * 100}%`; });
+            bars.forEach((b, i) => { b.style.transform = `scaleX(${Math.max(0, Math.min(1, self.progress * panels.length - i))})`; });
             const cur = Math.round(self.progress * (panels.length - 1));
             buttons.forEach((b, i) => b.setAttribute('aria-current', String(i === cur)));
           },
@@ -312,22 +312,29 @@ function scenes() {
       let lastDir = 1;
       const offDir = lenis?.on('scroll', (l) => { if (l.direction && !snapping) lastDir = l.direction; });
       const snap = () => {
+        flushRefresh();
         const st = move.scrollTrigger;
         if (!lenis || snapping || !st) return;
         const y = window.scrollY;
         if (y <= st.start + 2 || y >= st.end - 2) return;
-        // Aimantation dans le sens du geste : un geste franc fait passer au monde suivant
+        // Aimantation douce vers le monde le plus proche (un geste franc, au-delà de 60 %, passe au suivant)
         const f = ((y - st.start) / (st.end - st.start)) * (panels.length - 1);
         const base = Math.floor(f);
         const frac = f - base;
-        const i = frac < 0.08 ? base : frac > 0.92 ? base + 1 : lastDir > 0 ? base + 1 : base;
+        const i = frac > (lastDir > 0 ? 0.4 : 0.6) ? base + 1 : base;
         const target = yOf(Math.min(panels.length - 1, Math.max(0, i)));
         if (Math.abs(target - y) < 4) return;
         snapping = true;
-        lenis.scrollTo(target, { duration: 0.75, easing: (t) => 1 - (1 - t) ** 3, onComplete: () => { snapping = false; } });
-        setTimeout(() => { snapping = false; }, 1200);
+        lenis.scrollTo(target, { duration: 0.9, easing: (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2), onComplete: () => { snapping = false; } });
+        setTimeout(() => { snapping = false; }, 1300);
       };
-      ScrollTrigger.addEventListener('scrollEnd', snap);
+      let snapTimer = null;
+      const snapLater = () => { clearTimeout(snapTimer); snapTimer = setTimeout(snap, 140); };
+      ScrollTrigger.addEventListener('scrollEnd', snapLater);
+      // Clavier, barre de défilement ou doigt : l'utilisateur reprend la main tout de suite
+      const cancelSnap = () => { clearTimeout(snapTimer); if (snapping) { snapping = false; lenis?.scrollTo(window.scrollY, { immediate: true, force: true }); } };
+      window.addEventListener('keydown', cancelSnap);
+      window.addEventListener('pointerdown', cancelSnap);
       // Navigation au clavier : un bouton atteint par Tab fait venir son monde à l'écran
       const onFocus = (e) => {
         const p = e.target.closest('.porte-monde');
@@ -336,7 +343,7 @@ function scenes() {
         if (Math.abs(window.scrollY - y) > 4) { if (lenis) lenis.scrollTo(y, { duration: 0.9, force: true }); else window.scrollTo(0, y); }
       };
       track.addEventListener('focusin', onFocus);
-      cleanup = () => { ScrollTrigger.removeEventListener('scrollEnd', snap); track.removeEventListener('focusin', onFocus); offDir?.(); setAnchorResolver(null); };
+      cleanup = () => { ScrollTrigger.removeEventListener('scrollEnd', snapLater); clearTimeout(snapTimer); window.removeEventListener('keydown', cancelSnap); window.removeEventListener('pointerdown', cancelSnap); track.removeEventListener('focusin', onFocus); offDir?.(); setAnchorResolver(null); };
       panels.forEach((p) => {
         registerScene(ScrollTrigger.create({ trigger: p, containerAnimation: move, start: 'left 55%', end: 'right 55%', onToggle: sceneChanged }), () => setPanelScene(p), () => move.scrollTrigger.isActive);
         const inner = p.querySelector('.media__inner');
@@ -386,7 +393,8 @@ function scenes() {
 
   // La porte qui ne se ferme jamais : la lumière gagne la pièce à mesure qu'on approche
   gsap.timeline({ scrollTrigger: { trigger: '.door', start: 'top 80%', end: 'center 40%', scrub: 0.6 } })
-    .fromTo('.door__media .media__inner', { scale: 1.14, filter: 'brightness(.5) saturate(.75)' }, { scale: 1, filter: 'brightness(1.08) saturate(1)', ease: 'none' }, 0)
+    .fromTo('.door__media .media__inner', { scale: 1.12 }, { scale: 1, ease: 'none' }, 0)
+    .fromTo('.door__shade', { opacity: 0.5 }, { opacity: 0, ease: 'none' }, 0)
     .fromTo('.door__glow', { opacity: 0.15 }, { opacity: 1, ease: 'power1.in' }, 0)
     .fromTo('.door__floor', { opacity: 0.2, scaleX: 0.6 }, { opacity: 1, scaleX: 1.1, ease: 'none' }, 0);
   gsap.from('.reassure li', { x: 60, opacity: 0, stagger: 0.1, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.reassure', start: 'top 85%', once: true } });
